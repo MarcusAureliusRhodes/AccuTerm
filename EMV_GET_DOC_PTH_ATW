@@ -1,0 +1,60 @@
+PROGRAM EMV_GET_DOC_PTH_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 06/19/2019 15:54:37 by marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function: Get path to My Documents folder using AccuTerm Script
+
+   EQU IDENTITY TO 'EMV_GET_DOC_PTH_ATW'
+
+   INCLUDE EMV_UBIQUTIOUS_STUFF
+
+   EQU ESC TO CHAR(  27 )
+   EQU STX TO CHAR(   2 )
+   EQU CR  TO CHAR(  13 )
+   EQU EM  TO CHAR(  25 )
+
+   VBA_CODE  = '{027}{002}PInitSession.Output MyDocPath()&vbCr'
+   VBA_CODE := '{025}End Sub'
+   VBA_CODE := '{025}Private Declare Function SHGetFolderPath& Lib "shfolder.dll" Alias "SHGetFolderPathA" (ByVal hwnd&,ByVal fldr&,ByVal tok&,ByVal dw&,ByVal Path$)'
+   VBA_CODE := '{025}Function MyDocPath() As String'
+   VBA_CODE :=    '{025}Dim path As String'
+   VBA_CODE :=    '{025}On Error Resume Next'
+   VBA_CODE :=    '{025}path=String$(1000,0)'
+   VBA_CODE :=    '{025}SHGetFolderPath 0,5,0,0,path'
+   VBA_CODE :=    '{025}path=Left$(path,InStr(path,Chr$(0))-1)'
+   VBA_CODE :=    '{025}If Len(path) Then'
+   VBA_CODE :=       '{025}If Right$(path,1)<>"\" Then'
+   VBA_CODE :=         '{025}path=path&"\"'
+   VBA_CODE :=       '{025}End If'
+   VBA_CODE :=    '{025}End If'
+   VBA_CODE :=    '{025}MyDocPath=path'
+   VBA_CODE := '{025}End Function'
+   VBA_CODE := '{025}Sub Dummy{013}'
+
+!  CRT EMV_ENCODE( VBA_CODE ) :
+
+   CRT ESC : STX : 'P' : CHANGE( VBA_SCPT, '`', EM ) : CR :
+
+   ECHO OFF
+
+   PROMPT ''
+
+   INPUT PATH :
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+   CRT PATH
+
+STOP

@@ -1,0 +1,217 @@
+SUBROUTINE EMV_MLT_LST_BOX_ATW( PART_LST, NAME_LST, VIEW_LST, LIST_TTL, DLOG_HDR )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 03/26/2019 22:00:48 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Presents the user a GUI list from which to choose  any number
+!           of items,  or  none,  returning  the  id(s)  of  the  item(s)
+!           selected, or null.
+
+!           The descriptions to be listed (VIEW_LST) will be automatical-
+!           ly measured and sized to take up no more than about half  the
+!           screen.
+
+! Variable IO Typ Description____________________________________________
+! PART_LST >< 1DA on entry, id(s) of initial  selection(s).  Null  if  no
+!                 items initially selected.
+!                 on return, id(s) of item(s)  chosen.  Null  if  nothing
+!                 chosen.
+! NAME_LST >< 1DA ids of all items to choose from.
+! VIEW_LST >< 1DA descriptions of all items to choose from.
+! LIST_HDR >< STR list heading
+! DLOG_HDR >< STR window heading
+
+! Old name: SUBROUTINE EMV_MLST_ATW( PART_LST, NAME_LST, VIEW_LST, LIST_HDR, DLOG_HDR )
+
+   EQU IDENTITY TO 'EMV_MLT_LST_BOX_ATW'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF ;! Let's keep these elemental.
+
+   EQU STX      TO CHAR(  2 )
+   EQU CR       TO CHAR( 13 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   PROMPT ''
+
+   ! Check our parameters
+
+   IF ASSIGNED( PART_LST ) ELSE PART_LST  = ''
+   IF ASSIGNED( NAME_LST ) ELSE NAME_LST  = ''
+   IF ASSIGNED( VIEW_LST ) ELSE VIEW_LST  = ''
+   IF ASSIGNED( LIST_HDR ) ELSE LIST_HDR  = 'No heading?!'
+   IF ASSIGNED( DLOG_HDR ) ELSE DLOG_HDR  = 'No title?!'
+
+   IF VIEW_LST EQ '' THEN
+
+      IF NAME_LST EQ '' ELSE
+
+         VIEW_LST  = NAME_LST
+
+      END
+
+   END ELSE
+
+      IF NAME_LST EQ '' THEN
+
+         LIST_MAX  = DCOUNT( VIEW_LST, @AM )
+
+         FOR LIST_IDX = 1 TO LIST_MAX
+
+            NAME_LST< LIST_IDX >  = LIST_IDX
+
+         NEXT LIST_IDX
+
+      END
+
+   END
+
+   IF PART_LST EQ '' ELSE
+
+      LOCATE PART_LST IN NAME_LST SETTING ITEM_NUM ELSE
+
+         ITEM_NUM  = 0
+
+      END
+
+   END
+
+   FONT_WID  =  7.5
+   FONT_HGT  = 12.5
+
+   ITEM_MAX  = DCOUNT( NAME_LST, @AM )
+
+   BRDR_WID  = INT( FONT_WID * 1.5 )
+   BTTN_HGT  = INT( FONT_HGT * 1.5 )
+
+   LIST_WID  = LEN( LIST_HDR ) ;! Preset to LEN( NAME_LST ) / DCOUNT( NAME_LST, @AM )
+   DLOG_WID  = LEN( DLOG_HDR )
+
+   MIN_WDTH  = INT( FONT_WID * ( DLOG_WID : @AM : LIST_WID )< ( LIST_WID GT DLOG_WID ) + 1 > )
+   MAX_WDTH  = INT( FONT_WID * 120 )
+   MIN_HGHT  = INT( FONT_HGT *   3 )
+   MAX_HGHT  = INT( FONT_HGT *  20 )
+
+   ! Turn the list of pre-selected items into a string of comma-separated
+   ! index numbers for VBA.
+
+   IF ASSIGNED( PART_LST ) THEN ELSE
+
+      PART_LST  = ''
+
+   END
+
+   PART_CSV  = CHANGE( PART_LST, @AM, ',' )
+
+   LIST_WID  = 140 ;! Initial width of list box
+   LIST_HGT  = ITEM_MAX * FONT_HGT
+
+   VBA_CODE        = 'Dim S As Session'
+   VBA_CODE< -1 >  = 'Set S=ActiveSession'
+   VBA_CODE< -1 >  = 'Dim lists$(' : ITEM_MAX : ')'
+
+   VWID_TTL  = 0
+   VLEN_TTL  = 0
+
+   FOR ITEM_NUM = 1 TO ITEM_MAX
+
+      VIEW_TXT  = VIEW_LST< ITEM_NUM >
+
+      VBA_CODE< -1 >  = 'lists$(' : ITEM_NUM : ')="' : VIEW_TXT : '"'
+
+      CALL EMV_GET_STR_LEN_ATW( STRG_LEN, VIEW_TXT )
+
+      VWID_TTL += STRG_LEN
+      VLEN_TTL += ITEM_LEN
+
+      IF VIEW_WID GT LIST_WID THEN
+
+         LIST_WID  = VIEW_WID
+
+      END
+
+   NEXT ITEM_NUM
+
+   ! Sanity check
+
+   IF LIST_WID LT MIN_WDTH THEN LIST_WID  = MIN_WDTH
+   IF LIST_WID GT MAX_WDTH THEN LIST_WID  = MAX_WDTH
+   IF LIST_HGT LT MIN_HGHT THEN LIST_HGT  = MIN_HGHT
+   IF LIST_HGT GT MAX_HGHT THEN LIST_HGT  = MAX_HGHT
+
+   DLOG_WID  = LIST_WID + BRDR_WID * 2
+   DLOG_HGT  = LIST_HGT + BRDR_WID * 2 + BTTN_HGT + FONT_HGT * 2
+
+   BTTN_TOP  = DLOG_HGT - BTTN_HGT - BRDR_WID
+   BTTN_WID  = INT( ( DLOG_WID - BRDR_WID * 3 ) / 2 )
+
+   VBA_CODE< -1 >  = 'Begin Dialog UserDialog ' : DLOG_WID : ',' : DLOG_HGT : ',"' : DLOG_HDR : '"'
+   VBA_CODE< -1 >  =    'Text ' : BRDR_WID : ',' : INT( FONT_HGT / 2 ) : ',' : LIST_WID : ',' : FONT_HGT : ',"' : LIST_HDR : '"'
+   VBA_CODE< -1 >  =    'MultiListBox ' : BRDR_WID : ',' : ( FONT_HGT * 2 ) : ',' : LIST_WID : ',' : LIST_HGT : ',lists$(),.list'
+   VBA_CODE< -1 >  =    'CancelButton ' : BRDR_WID : ',' : BTTN_TOP : ',' : BTTN_WID : ',' : BTTN_HGT
+   VBA_CODE< -1 >  =    'OKButton ' : ( BTTN_WID + BRDR_WID * 2 ) : ',' : BTTN_TOP : ',' : BTTN_WID : ',' : BTTN_HGT
+   VBA_CODE< -1 >  = 'End Dialog'
+   VBA_CODE< -1 >  = 'Dim dlg As UserDialog'
+   VBA_CODE< -1 >  = 'dlg.list=Array(' : PART_CSV : ')'
+   VBA_CODE< -1 >  = 'd=Dialog(dlg,-1)'
+   VBA_CODE< -1 >  = 'l$=""'
+   VBA_CODE< -1 >  = 'If d=-1 then'
+   VBA_CODE< -1 >  =    'a=LBound(dlg.list)'
+   VBA_CODE< -1 >  =    'z=UBound(dlg.list)'
+   VBA_CODE< -1 >  =    'For i = a To z'
+!  VBA_CODE< -1 >  =       'l$=l$&CStr(dlg.list(i))&"|"' ;! Return the actual data selected by the user.
+   VBA_CODE< -1 >  =       'l$=l$&CStr(i)&"|"' ;! Return the positions of the data selected by the user.
+!  VBA_CODE< -1 >  =       'S.Output CStr(i)&vbCr'
+   VBA_CODE< -1 >  =    'Next i'
+   VBA_CODE< -1 >  = 'End If'
+   VBA_CODE< -1 >  = 'S.Output "That`s all, folks!"&vbCr'
+
+!  CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+   ! Retrieve the results
+
+   ECHO OFF
+
+   INPUT PART_LST :
+
+!  PART_MAX  = 0
+
+!  LOOP
+
+!     INPUT FULL_IDX :
+
+!  WHILE FULL_IDX DO
+
+!     PART_MAX += 1
+
+!     PART_LST< PART_MAX >  = NAME_LST< FULL_IDX >
+
+!  REPEAT
+
+   ECHO ON
+CRT 'PART_LST = `' : PART_LST : '`' : ; INPUT DUMMY
+!  CALL EMV_CURSOR_RESTORE
+
+!  PART_LST  =   TRIM( PART_LST, '|', 'T' )
+!  PART_LST  = CHANGE( PART_LST, '|', @AM )
+!  PART_MAX  = DCOUNT( PART_LST, @AM )
+
+!  FOR PART_IDX = 1 TO PART_MAX
+
+!     PART_LST< PART_IDX >  = VIEW_LST< PART_LST< PART_IDX > + 1 >
+!     PART_LST< PART_IDX >  = NAME_LST< PART_LST< PART_IDX > + 1 >
+
+!  NEXT PART_IDX
+
+RETURN ;! to the calling program.

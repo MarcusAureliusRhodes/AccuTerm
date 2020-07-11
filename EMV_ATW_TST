@@ -1,0 +1,67 @@
+PROGRAM EMV_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:10 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Provide a safe playground for prototyping and experimenting
+
+! Syntax  : EMV_ATW_TST
+
+! (Options: None
+
+! Examples: EMV_ATW_TST
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: EMV_ATW_TST
+
+! Catalog : EMV_ATW_TST
+
+! New name: N/A
+
+   EQU IDENTITY TO 'EMV_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   VBA_CODE  = CHAR( 27 ) : CHAR( 2 ) : 'P'
+   VBA_CODE := 'On Error Resume Next~'
+   VBA_CODE := 'BasePath$=MacroDir$~'
+   VBA_CODE := 'ConfPath$=BasePath$&"\UserInfo.txt"~'
+   VBA_CODE := 'If FileExists(ConfPath$) Then~'
+   VBA_CODE :=    'Open ConfPath$ For Input As #ConfFile~'
+   VBA_CODE :=    'Input #ConfFile,ATCFPath$~'
+   VBA_CODE :=    'Close #ConfFile~'
+   VBA_CODE := 'Else~'
+   VBA_CODE :=    'ATCFPath$=GetFilePath$("","atcf",BasePath$,"Locate th'
+   VBA_CODE :=       'e AccuTerm profile to use.",0)~'
+   VBA_CODE := 'End If~'
+   VBA_CODE := 'Open ConfPath$ For Output As #ConfFile~'
+   VBA_CODE := 'Print #ConfFile,ATCFPath$~'
+   VBA_CODE := 'Close #ConfFile~'
+   VBA_CODE := 'Set s=Sessions.Add(ATCFPath$,2,1)~'
+   VBA_CODE := 's.Reset atResetTerminal~'
+   VBA_CODE := 's.InputMode=0~'
+   VBA_CODE := 's.SetSelection 0,0,80,24~'
+   VBA_CODE := 'PrmptNum=s.WaitFor(1,9,"login:")~'
+   VBA_CODE := 's.Output "marcus"&vbCr~'
+   VBA_CODE := 'PrmptNum=s.WaitFor(1,9,"password:")~'
+   VBA_CODE := 's.Output "Ma28735487!"&vbCr~'
+   VBA_CODE := 'PrmptNum=s.WaitFor(1,9,"Which account do you want to log'
+   VBA_CODE :=    ' to","or some other prompt")~'
+   VBA_CODE := 'If PrmptNum=1 Then~'
+   VBA_CODE :=    's.Output "G"~'
+   VBA_CODE :=    'PrmptNum=s.WaitFor(1,9,":")~'
+   VBA_CODE := 'End If~' : CHAR( 13 )
+
+   VBA_CODE  = CHANGE( VBA_CODE, '~', CHAR( 25 ) )
+
+   CRT VBA_CODE :
+
+STOP

@@ -1,0 +1,55 @@
+SUBROUTINE EMV_INP_FLD_ATW( RESPONSE, PRMT_TXT, HEAD_TXT )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 10/12/2018 13:06:39 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Accepts user-input with a prompt, title, OK & Cancel buttons.
+
+! Var_name IO Typ Description_____________________________________________
+! RESPONSE >< Str default entry and what the user enters
+! PRMT_TXT >  Str prompt message
+! HEAD_TXT >  Str window title-bar text
+
+! Upcoming:
+
+   EQU IDENTITY TO 'EMV_INP_FLD_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   PROMPT ''
+
+   IF ASSIGNED( HEAD_TXT ) ELSE HEAD_TXT = ''
+   IF ASSIGNED( PRMT_TXT ) ELSE PRMT_TXT = ''
+   IF ASSIGNED( RESPONSE ) ELSE DFLT_TXT = ''
+   IF      LEN( HEAD_TXT ) ELSE HEAD_TXT = '??? No heading ???'
+   IF      LEN( PRMT_TXT ) ELSE PRMT_TXT = '??? No prompt ???'
+
+   VBA_CODE       = 'InitSession.Activate'
+   VBA_CODE< -1 > = 'Set S=ActiveSession'
+   VBA_CODE< -1 > = 'I$=InputBox$("' : PRMT_TXT : '","' : HEAD_TXT : '","' : RESPONSE : '")'
+   VBA_CODE< -1 > = 'S.Output I$&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : CHAR( 27 ) : CHAR( 2 ) : 'P' : CHANGE( VBA_CODE, @AM, CHAR( 25 ) )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT RESPONSE :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN ;! to the calling program.

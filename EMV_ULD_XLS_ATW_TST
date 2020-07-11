@@ -1,0 +1,32 @@
+PROGRAM EMV_ULD_XLS_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/16/2014 21:50:31 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_ULD_XLS_ATW.
+
+!  EQU IDENTITY TO 'EMV_ULD_XLS_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   CALL EMV_ULD_XLS_ATW( SRC_PATH, SRC_FILE, EXCL_TBL, SUCCESSFUL )
+
+   CRT 'SRC_PATH   = "' : SRC_PATH   : '"'
+   CRT 'SRC_FILE   = "' : SRC_FILE   : '"'
+   CRT 'EXCL_TBL   = "' : EXCL_TBL   : '"'
+   CRT 'SUCCESSFUL = "' : SUCCESSFUL : '"'
+   CRT
+   CRT '(Press any key to continue.)' :
+
+   INPUT WHATEVER, 1 :
+
+   CRT @( 0 ) : @( -4 ) :
+
+STOP

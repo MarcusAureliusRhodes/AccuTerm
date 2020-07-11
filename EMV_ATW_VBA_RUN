@@ -1,0 +1,727 @@
+PROGRAM EMV_ATW_VBA_RUN
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 12/01/2018 17:04:52 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Runs VBA scripts in AccuTerm.
+
+! Syntax  : Just enter "EMV_ATW_VBA_RUN" at TCL, and follow the prompts.
+
+! Method  : Loads an AccuTerm WinWrap Basic macro (which is really just a
+!           VBA program) from a file, condenses it (by striping it  down,
+!           and shortening variable names), then executes it.
+
+!           WinWrap lacks Pick-like equates, which are just too handy  to
+!           do without, so we'll emulate them here via a  'pre-processor'
+!           feature.  We'll also support Pick-like comment characters (*,
+!           !) in order to better accommodate WED's syntax-highlighting.
+
+!           A curiosity of WinWrap VB is that,  unlike  keyboard  macros,
+!           downloaded macros lose their  global  variables  because  the
+!           interpeter adds  its  own  'Sub Main'  prefix  and  'End Sub'
+!           suffix to them, breaking  any  'Public variable-name as type'
+!           headers.  The solution is to strip  any  'Sub Main'/'End Sub'
+!           lines from the beginning/end of the  macros  (although,  they
+!           should still be there  to  be  stripped,  even  if  only  for
+!           clarity in the macro  code),  as  well  as  to  mimic  global
+!           variables by creating a dimensioned array  to  contain  them,
+!           and then passing that array to any subroutine that needs  any
+!           of those 'global' variables.  To that end, we  recommend  the
+!           session variable always be a single-character variable:
+
+!              Dim z As Session
+!              InitSession.Activate
+!              Set z = ActiveSession
+!              z.Reset atResetTerminal
+!              z.InputMode = 0
+
+!           This variable can be any UNIQUE single-letter variable,  a-z,
+!           and can/should also be added to every subroutine call:
+
+!              Call SubName( z, Prompts )
+
+!           Additional 'global' variables can be deployed using this same
+!           EQU method:
+
+!              EQU Globals  TO g
+!              EQU Globals$ TO g$
+
+!           This allows your VBA  code  to  use  full-length,  meaningful
+!           variable-names, which, at run-time, are replaced  with  their
+!           corresponding, single-letter versions in order to reduce  the
+!           size of the downloaded/executed code while also improving its
+!           execution speed.  Maybe.
+
+!           See the  sample/prototype  script,  EMV_ATW_VBA_RUN.vba,  for
+!           more.
+
+! Upcoming: Automatically add all 'Dim z As Session' lines, and z as  the
+!           first parameter of each subroutine, as well as to  all  their
+!           corresponding calls.
+
+!           Automatically 'globalize' any/all dimensioned arrays.
+!           Automatically swap out all known, standard placeholders, such
+!           as LF, CR, @AM, @VM, ...
+
+!           Automatically correct variable-names containing at any  char-
+!           acters forbidden in VBA.
+
+   EQU IDENTITY TO 'EMV_ATW_VBA_RUN'
+
+   EQU STX      TO CHAR(  2 )
+   EQU LF       TO CHAR( 10 )
+   EQU CR       TO CHAR( 13 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   ALLSWELL  = @TRUE
+
+   IF ALLSWELL THEN GOSUB SET.VARIABLES
+   IF ALLSWELL THEN GOSUB GET.SCRIPTS
+   IF ALLSWELL THEN GOSUB GET.SCRIPT
+
+STOP
+
+SET.VARIABLES:
+
+   VBA_FILE  = 'EMV,VBA'
+   BIN_FILE  = 'EMV,BIN'
+
+   ! Chars allowed in VB variable names: $%0-9.A-Z_a-z
+   !   NOT allowed in VB variable names: {000}-#,&--,/,:-`,{-{255}
+   !   NOT allowed in VB variable names: {000}-{035},{038}-{045},{047},{058}-{064},{091}-{094},{096},{123}-{255}
+
+   DELIMTRS  = ''
+   DIM_LINE  = 0
+
+   FOR CHAR_NUM =   0 TO  35 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM =  38 TO  45 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM =  47 TO  47 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM =  58 TO  64 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM =  91 TO  94 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM =  96 TO  96 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+   FOR CHAR_NUM = 123 TO 255 ; DELIMTRS := CHAR( CHAR_NUM ) ; NEXT CHAR_NUM
+
+   OPEN VBA_FILE TO VBA_FVAR ELSE
+
+      DLOG_HDR  = '!!! F A I L U R E !!!'
+      MSG_TEXT  = 'Could not open ' : VBA_FILE : '!'
+
+      CALL EMV_MSG_BOX_ATW( WHATEVER, DLOG_HDR, MSG_TEXT, 1, 0, 0 )
+
+      ALLSWELL  = @FALSE
+
+   END
+
+   OPEN BIN_FILE TO BIN_FVAR ELSE
+
+      DLOG_HDR  = '!!! F A I L U R E !!!'
+      MSG_TEXT  = 'Could not open ' : BIN_FILE : '!'
+
+      CALL EMV_MSG_BOX_ATW( WHATEVER, DLOG_HDR, MSG_TEXT, 1, 0, 0 )
+
+      ALLSWELL  = @FALSE
+
+   END
+
+RETURN
+
+GET.SCRIPTS:
+
+   VBA_LIST  = ''
+
+   SELECT VBA_FVAR
+
+   LOOP
+
+      READNEXT VBA_NAME THEN
+
+         IF OCONV( VBA_NAME[ 4 ], 'MCU' ) EQ '.VBA' THEN
+
+            VBA_LIST< -1 >  = VBA_NAME
+
+         END
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   IF VBA_LIST EQ '' THEN
+
+      DLOG_HDR  = '!!! F A I L U R E !!!'
+      MSG_TEXT  = 'No scripts found in ' : VBA_FILE : '!' : @AM : @AM
+      MSG_TEXT := '(Scripts` names must end in .vba)'
+
+      CALL EMV_MSG_BOX_ATW( RESPONSE, DLOG_HDR, MSG_TEXT, 1, 0, 0 )
+
+      ALLSWELL  = @FALSE
+
+   END
+
+RETURN
+
+GET.SCRIPT:
+
+   DLOG_HDR  = 'VBA Scripts'
+   LIST_HDR  = 'Select the script to run.'
+   RESPONSE  = 1
+
+   LOOP
+
+      CALL EMV_LST_BOX_ATW( DLOG_HDR, LIST_HDR, VIEW_LST, DLOG_WID, DLOG_HGT, FONT_WID, RESPONSE )
+
+      ALLSWELL  = RESPONSE
+
+   WHILE ALLSWELL DO
+
+      GOSUB RUN.SCRIPT
+
+   REPEAT
+
+RETURN
+
+RUN.SCRIPT:
+
+   VBA_NAME  = VBA_LIST< RESPONSE >
+
+   READ VBA_CODE FROM VBA_FVAR, VBA_NAME THEN
+
+      GOSUB CHK.ARRAY
+      GOSUB OUT.DENT
+      GOSUB CUT.COMMENTS
+      GOSUB GET.STRINGS
+      GOSUB CUT.FORMATTING
+      GOSUB GET.EQUATES
+      GOSUB SET.EQUATES
+      GOSUB SET.STRINGS
+      GOSUB EXE.SCRIPT
+
+   END ELSE
+
+      DLOG_HDR  = '!!! F A I L U R E !!!'
+      MSG_TEXT  = 'Could not read MR.BP ' : IDENTITY : '!'
+
+      CALL EMV_MSG_BOX_ATW( WHATEVER, DLOG_HDR, MSG_TEXT, 1, 0, 0 )
+
+   END
+
+RETURN
+
+CHK.ARRAY:
+
+   ! See whether Prompts warrants any renumbering.
+
+   ANSW_MAX  = 0
+   RENUMLST  = ''
+   LINE_MAX  = DCOUNT( VBA_CODE, @AM )
+   DIM_LINE  = 0
+   LINE_MIN  = 0
+   PREV_DIM  = 0
+
+   FOR LINE_NUM = 1 TO LINE_MAX
+
+      THE_LINE  = VBA_CODE< LINE_NUM >
+      TRM_LINE  = OCONV( TRIM( THE_LINE ), 'MCU' )
+
+      BEGIN CASE
+
+         CASE TRM_LINE[ 1, 13 ] EQ 'DIM PROMPTS$('                                       ; GOSUB GET.DIMENSION
+         CASE TRM_LINE[ 1, 10 ] EQ '! PROMPTS(' AND INDEX( TRM_LINE, '='           , 1 ) ; GOSUB ENABLE.ANSWER
+         CASE TRM_LINE[ 1, 10 ] EQ '! PROMPTS ' AND INDEX( TRM_LINE, '='           , 1 ) ; GOSUB SET.COUNT
+         CASE TRM_LINE[ 1,  4 ] EQ 'EQU '       AND INDEX( TRM_LINE, ' TO PROMPTS(', 1 ) ; GOSUB COUNT.EQU
+         CASE TRM_LINE[ 1,  8 ] EQ 'PROMPTS('   AND INDEX( TRM_LINE, '='           , 1 ) ; GOSUB COUNT.ASSIGNMENT
+
+      END CASE
+
+   NEXT LINE_NUM
+
+   ! (Re)insert `Dim Prompts$( n )`
+
+   VBA_CODE< DIM_LINE > = '   Dim Prompts$( ' : ( ANSW_MAX - 1 ) 'R#3 )' : @AM : @AM : VBA_CODE< DIM_LINE >
+
+   LINE_MAX += 2
+   LINE_MIN += 3
+   LAST_ANS  = DCOUNT( RENUMLST, @AM )
+
+   FOR ANSW_IDX = 1 TO LAST_ANS
+
+      IF ANSW_IDX EQ ( RENUMLST< ANSW_IDX > + 1 ) ELSE
+
+         ANSW_MAX  = 0
+
+      END
+
+   NEXT ANSW_IDX
+
+   IF ANSW_MAX EQ PREV_DIM ELSE
+
+      GOSUB REN.PROG
+
+   END
+
+RETURN
+
+GET.DIMENSION:
+
+   PREV_DIM  = TRIM( FIELD( FIELD( THE_LINE, '(', 2 ), ')', 1 ) ) + 1
+
+   DEL VBA_CODE< LINE_NUM >
+
+   IF VBA_CODE< LINE_NUM > EQ '' THEN
+
+      DEL VBA_CODE< LINE_NUM >
+
+      LINE_MAX -= 1
+      LINE_NUM -= 1
+
+   END
+
+   LINE_MAX -= 1
+   LINE_NUM -= 1
+
+RETURN
+
+ENABLE.ANSWER:
+
+   !  Prompts(   ) = "<Enter> = Continue, O = Override Freight   Enter Option cking# H = Help X = Back"
+   !  PROMPTS(   ) = "<ENTER> = CONTINUE, O = OVERRIDE FREIGHT ENTER OPTION CKING# H = HELP X = BACK"
+   !  Prompts( 0 ) = "<Enter> = Continue, O = Override Freight   Enter Option cking# H = Help X = Back"
+
+   VBA_CODE< LINE_NUM > = ' ' : FIELD( THE_LINE[ 2, 999 ], '(', 1 ) : '( 0 )' : OCONV( THE_LINE, 'G1)99' )
+
+   LINE_NUM -= 1
+
+RETURN
+
+COUNT.EQU:
+
+   ! What was I thinking here?  Count anything lacking a ";! Prompts ..."
+   ! comment as an array member?  Why?
+
+   IF FIELD( TRM_LINE, ';', 2 )[ 1, 9 ] EQ '! Prompts' ELSE
+
+      ANSW_MAX += 1
+
+      RENUMLST< ANSW_MAX > = TRIM( FIELD( FIELD( TRM_LINE, '(', 2 ), ')', 1 ) )
+
+   END
+
+   IF DIM_LINE ELSE
+
+      DIM_LINE  = LINE_NUM
+
+   END
+
+   LINE_MIN  = LINE_NUM
+
+RETURN
+
+COUNT.ASSIGNMENT:
+
+   ANSW_MAX += 1
+
+   RENUMLST< ANSW_MAX >  = TRIM( FIELD( FIELD( TRM_LINE, '(', 2 ), ')', 1 ) )
+
+   IF DIM_LINE ELSE
+
+      DIM_LINE  = LINE_NUM
+
+   END
+
+   LINE_MIN  = LINE_NUM
+
+RETURN
+
+REN.PROG:
+
+   ! Renumber every instance of Reaction being queried.
+
+   REACTION  = 0 ;! Whether a `Case` falls under `Select Case Reaction`.
+
+   FOR LINE_NUM = LINE_MAX TO LINE_MIN STEP -1
+
+      THE_LINE = VBA_CODE< LINE_NUM >
+      TRM_LINE = OCONV( TRIM( THE_LINE ), 'MCU' )
+
+      BEGIN CASE
+
+         CASE TRM_LINE          EQ ''
+         CASE TRM_LINE[ 1,  1 ] EQ '!'
+         CASE TRM_LINE[ 1,  1 ] EQ '*'
+         CASE   INDEX( TRM_LINE, ' AND REACTION ', 1 )       ; GOSUB REN.REACTION
+         CASE   INDEX( ' AND REACTION ', TRM_LINE, 1 )       ; GOSUB REN.REACTION
+         CASE   INDEX( TRM_LINE,  ' OR REACTION ', 1 )       ; GOSUB REN.REACTION
+         CASE   INDEX( ' OR REACTION ', TRM_LINE,  1 )       ; GOSUB REN.REACTION
+         CASE TRM_LINE[ 1, 12 ] EQ 'IF REACTION '            ; GOSUB REN.REACTION
+         CASE TRM_LINE[ 1, 20 ] EQ 'SELECT CASE REACTION'    ; REACTION += 1
+         CASE TRM_LINE[ 1, 10 ] EQ 'END SELECT' AND REACTION ; REACTION -= 1
+         CASE TRM_LINE[ 1,  6 ] EQ 'CASE "'     AND REACTION ; GOSUB REN.REACTION
+
+      END CASE
+
+   NEXT LINE_NUM
+
+   ! We changed numbers from "old" to ~`new~` (changing quotes to  ~`) in
+   ! order to prevent them being changed twice in the  case  of  multiple
+   ! instances on a single line, so now we need to change all the ~` back
+   ! into ".
+
+   VBA_CODE = CHANGE( VBA_CODE, '~' : '`', '"' )
+
+   ! Renumber the Prompts array itself, and any EQUates TO it.
+
+   FOR LINE_NUM = DIM_LINE TO LINE_MIN
+
+      THE_LINE  = VBA_CODE< LINE_NUM >
+      TRM_LINE  = OCONV( TRIM( THE_LINE ), 'MCU' )
+
+      BEGIN CASE
+
+         CASE TRM_LINE[ 1,  4 ] EQ 'EQU '      AND INDEX( TRM_LINE, 'TO PROMPTS(', 1 ) ; GOSUB REN.LINE
+         CASE TRM_LINE[ 1,  9 ] EQ 'PROMPTS( ' AND INDEX( TRM_LINE, '='          , 1 ) ; GOSUB REN.LINE
+         CASE TRM_LINE[ 1, 10 ] EQ '! PROMPTS '                                        ; GOSUB SET.COUNT
+
+      END CASE
+
+   NEXT LINE_NUM
+
+   ! Save the renumbered version.
+
+   WRITE VBA_CODE ON VBA_FVAR, VBA_NAME
+
+RETURN
+
+REN.REACTION:
+
+   IF INDEX( TRM_LINE, '"', 1 ) OR INDEX( '"', TRM_LINE, 1 ) THEN
+
+      OLD_NMBR = TRIM( FIELD( TRM_LINE, '"', 2 ) )
+
+      IF LEN( OLD_NMBR ) AND NUM( OLD_NMBR ) THEN
+
+         LOCATE OLD_NMBR IN RENUMLST SETTING NEW_NMBR ELSE
+
+            NEW_NMBR  = ''
+
+         END
+
+      END ELSE
+
+         NEW_NMBR  = ''
+
+      END
+
+      VBA_CODE< LINE_NUM > = FIELD( THE_LINE, '"', 1 ) : '~' : '`' : NEW_NMBR : '~' : '`' : OCONV( THE_LINE, 'G2"99' )
+
+      LINE_NUM += 1
+
+   END
+
+RETURN
+
+SET.COUNT:
+
+   OPERATOR = FIELD( TRM_LINE, ' ', 3 )
+   MAGNITUD = FIELD( TRM_LINE, ' ', 4 )
+
+   BEGIN CASE
+
+      CASE OPERATOR EQ '-=' AND LEN( MAGNITUD ) AND NUM( MAGNITUD ) ; ANSW_MAX -= MAGNITUD
+      CASE OPERATOR EQ '+=' AND LEN( MAGNITUD ) AND NUM( MAGNITUD ) ; ANSW_MAX += MAGNITUD
+      CASE OPERATOR EQ  '=' AND LEN( MAGNITUD ) AND NUM( MAGNITUD ) ; ANSW_MAX  = MAGNITUD
+
+   END CASE
+
+RETURN
+
+REN.LINE:
+
+   OLD_NMBR  = OCONV( FIELD( FIELD( THE_LINE, '(', 2 ), ')', 1 ), 'MCN' )
+
+   IF LEN( OLD_NMBR ) AND NUM( OLD_NMBR ) THEN
+
+      VBA_CODE< LINE_NUM > = FIELD( THE_LINE, '(', 1 ) : '( ' : ANSW_MAX 'R#3 )' : OCONV( THE_LINE, 'G1)99' )
+      ANSW_MAX += 1
+
+   END
+
+RETURN
+
+OUT.DENT:
+
+   LOOP
+
+      SAMESIZE = LEN( VBA_CODE )
+      VBA_CODE = CHANGE( VBA_CODE, @AM : ' '      , @AM )
+      VBA_CODE = CHANGE( VBA_CODE, @AM : CHAR( 9 ), @AM )
+
+   UNTIL LEN( VBA_CODE ) EQ SAMESIZE DO REPEAT
+
+RETURN
+
+CUT.COMMENTS:
+
+   ! Code must be out-dented first.
+
+   LINE_MAX = DCOUNT( VBA_CODE, @AM )
+
+   FOR LINE_NUM = LINE_MAX TO 1 STEP -1
+
+      VBA_LINE = TRIM( FIELD( VBA_CODE< LINE_NUM >, '!', 1 ) )
+
+      BEGIN CASE
+
+         CASE        VBA_LINE           EQ ''  ; DEL VBA_CODE< LINE_NUM >
+         CASE FIELD( VBA_LINE, '"', 1 ) EQ ''  ; VBA_CODE< LINE_NUM > = VBA_LINE
+         CASE        VBA_LINE[ 1 ]      EQ ';' ; VBA_CODE< LINE_NUM > = VBA_LINE[ 1, LEN( VBA_LINE ) - 1 ]
+
+      END CASE
+
+   NEXT LINE_NUM
+
+RETURN
+
+GET.STRINGS:
+
+   ! Swaps all the strings in the VBA program with  unique  placeholders,
+   ! storing the strings in an array, so we can make  wholesale  replace-
+   ! ments without corrupting our strings, and  then  swap  the  original
+   ! strings back in when done.
+
+   ! Comments must be cut first.
+
+   STRG_LST = ''
+   STRG_MAX = 0
+   LINE_MAX = DCOUNT( VBA_CODE, @AM )
+
+   FOR LINE_NUM = 1 TO LINE_MAX
+
+      VBA_LINE = VBA_CODE< LINE_NUM >
+
+      LOOP
+
+         QUOTES_2 = INDEX( VBA_LINE, '"', 2 ) OR INDEX( '"', VBA_LINE, 2 )
+
+      WHILE QUOTES_2 DO
+
+         STRG_MAX += 1
+
+         STRG_LST< STRG_MAX > = FIELD( VBA_LINE, '"', 2 )
+
+         VBA_LINE = CHANGE( VBA_LINE, '"' : STRG_LST< STRG_MAX > : '"', '{' : STRG_MAX : '}' )
+
+      REPEAT
+
+      VBA_CODE< LINE_NUM > = VBA_LINE
+
+   NEXT LINE_NUM
+
+RETURN
+
+CUT.FORMATTING:
+
+   ! Strings must be protected first.
+
+   VBA_CODE = CHANGE( VBA_CODE, CHAR( 9 ), ' ' )
+
+   LOOP
+
+      SAMESIZE = LEN( VBA_CODE )
+
+      VBA_CODE = CHANGE( VBA_CODE, CHAR( 9 ), ' ' )
+      VBA_CODE = CHANGE( VBA_CODE, ' ' : @AM, @AM )
+!     VBA_CODE = CHANGE( VBA_CODE, @AM : @AM, @AM )
+      VBA_CODE = CHANGE( VBA_CODE, '  '     , ' ' )
+
+   UNTIL LEN( VBA_CODE ) EQ SAMESIZE DO REPEAT
+
+   PAIR_SET = '(  ),  , ==  &&  ++  --  //  ** '
+
+   FOR PAIR_NUM = 1 TO 31 STEP 2
+
+      THE_PAIR = PAIR_SET[ PAIR_NUM, 2 ]
+
+      LOOP
+
+         SAMESIZE = LEN( VBA_CODE )
+         VBA_CODE = CHANGE( VBA_CODE, THE_PAIR, TRIM( THE_PAIR ) )
+
+      UNTIL LEN( VBA_CODE ) EQ SAMESIZE DO REPEAT
+
+   NEXT PAIR_NUM
+
+RETURN
+
+GET.EQUATES:
+
+   EQUS_LST = ''
+   LINE_MAX = DCOUNT( VBA_CODE, @AM )
+
+   FOR LINE_NUM = LINE_MAX TO 1 STEP -1
+
+      VBA_LINE = CHANGE( VBA_CODE< LINE_NUM >, ' ', @AM )
+
+      IF ( VBA_LINE< 1 > EQ 'EQU' OR VBA_LINE< 1 > EQ 'EQUATE' ) AND VBA_LINE< 3 > EQ 'TO' THEN
+
+         ! EQU BLC_CHAR TO EMV_GLBS(1)
+
+         EQUS_LST = VBA_LINE< 2 > : @VM : VBA_LINE< 4 > : @AM : EQUS_LST
+
+         DEL VBA_CODE< LINE_NUM >
+
+      END
+
+   NEXT LINE_NUM
+
+   EQUS_LST = TRIM( EQUS_LST, @AM, 'T' )
+
+RETURN
+
+SET.EQUATES:
+
+   ! Enables the emulation of equates in  AccuTerm's  WinWrap  Basic,  as
+   ! well as allowing for a reasonable facsimile of the global  variables
+   ! which become impossiple to use in a downloaded VBA script.  How?  By
+   ! using this newly added  equate  feature  to  replace  the  specified
+   ! variable-names with array elements, only the array  variable  itself
+   ! need  be passed among the subroutines  in  order  to  have  all  its
+   ! constituent values available everywhere.  It's not really  'global',
+   ! but it does radically reduce the  subroutine  parameter  lists.  And
+   ! it's not impossible in VBA without this, but this makes it much more
+   ! manageable.
+
+   ! First, we need to strip any formatting.
+
+   LOOP WHILE LEN( EQUS_LST ) DO
+
+      WORD_OLD = EQUS_LST< 1, 1 >
+      WORD_NEW = EQUS_LST< 1, 2 >
+
+      GOSUB EQU.STRINGS
+
+      DEL EQUS_LST< 1 >
+
+   REPEAT
+
+RETURN
+
+EQU.STRINGS:
+
+   PROG_LEN  = LEN( VBA_CODE )
+   WORD_END  = 1
+   WORD_LEN  = LEN( WORD_OLD )
+   LEN_DIFF  = LEN( WORD_NEW ) - LEN( WORD_OLD )
+
+   LOOP
+
+      WORD_BEG  = VBA_CODE[ WORD_END, PROG_LEN ]
+      WORD_BEG  = INDEX( WORD_BEG, WORD_OLD, 1 ) + INDEX( WORD_OLD, WORD_BEG, 1 )
+
+   WHILE WORD_BEG DO
+
+      WORD_BEG += WORD_END - 2
+      LAST_CHR  = VBA_CODE[ WORD_BEG, 1 ]
+
+      IF INDEX( DELIMTRS, LAST_CHR, 1 ) OR INDEX( LAST_CHR, DELIMTRS, 1 ) THEN
+
+         WORD_END  = WORD_BEG + LEN( WORD_OLD ) + 1
+         NEXT_CHR  = VBA_CODE[ WORD_END, 1 ]
+
+         IF INDEX( DELIMTRS, NEXT_CHR, 1 ) OR INDEX( NEXT_CHR, DELIMTRS, 1 ) THEN
+
+            PROG_LEN += LEN_DIFF
+            VBA_CODE  = VBA_CODE[ 1, WORD_BEG ] : WORD_NEW : VBA_CODE[ WORD_END, PROG_LEN ]
+            WORD_END  = WORD_BEG + LEN( WORD_NEW )
+
+         END ELSE
+
+            WORD_END  = WORD_BEG + 2
+
+         END
+
+      END ELSE
+
+         WORD_END  = WORD_BEG + 2
+
+      END
+
+   REPEAT
+
+RETURN
+
+SET.STRINGS:
+
+   ! ... restores all the strings that were extracted by GET.STRINGS
+
+   FOR STRG_NUM = 1 TO STRG_MAX
+
+      VBA_CODE = CHANGE( VBA_CODE, '{' : STRG_NUM : '}', '"' : STRG_LST< STRG_NUM > : '"' )
+
+   NEXT STRG_NUM
+
+RETURN
+
+EXE.SCRIPT:
+
+   ! AccuTerm always adds its own first (Sub Main)  and  last  (End  Sub)
+   ! lines to our script at the moment we send it, and there's no way  to
+   ! defeat this behavior, so we'll have to work around it. We'll do this
+   ! by always writing our script with those same first and last lines as
+   ! a reminder of their presence, but then removing them just  prior  to
+   ! sending the script so as to avoid conflicting  with  AccuTerm's  own
+   ! first and last lines.
+
+   ! Store the final version of the script for later analysis.
+
+   DT_STAMP  = "' " : OCONV( DATE(), 'D4/' )
+   DT_STAMP := ' '  : OCONV( TIME(), 'MTS' )
+   DT_STAMP := ' '  : @LOGNAME
+
+   BIN_NAME  = VBA_NAME
+
+   IF BIN_FILE EQ VBA_FILE THEN
+
+      ! We need to change the .ext to avoid overwriting the original when
+      ! both are stored in the same file.
+
+      BIN_NAME := '|'
+      BIN_NAME  = CHANGE( BIN_NAME, '.vba|', '.bin' )
+      BIN_NAME  = CHANGE( BIN_NAME, '.VBA|', '.bin' )
+
+   END
+
+   WRITE INSERT( VBA_CODE, 2; DT_STAMP ) ON BIN_FVAR, BIN_NAME
+
+   ! At long last, it's time to remove the first and  last  lines,  which
+   ! *should* be 'Sub Main' and 'End Sub', but don't have to be.
+
+   IF VBA_CODE< 1 > EQ 'Sub Main' THEN
+
+      DEL VBA_CODE< 1 >
+
+   END
+
+   LINE_MAX  = DCOUNT( VBA_CODE, @AM )
+
+   IF VBA_CODE< LINE_MAX > EQ 'End Sub' THEN
+
+      DEL VBA_CODE< LINE_MAX >
+
+   END
+
+   ! And finally pass the script to AccuTerm.
+
+   CRT ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+RETURN

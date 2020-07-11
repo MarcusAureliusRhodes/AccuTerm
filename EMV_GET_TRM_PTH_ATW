@@ -1,0 +1,130 @@
+SUBROUTINE EMV_GET_TRM_PTH_ATW( WRITEFLG, HEADLINE, FILESPEC, PATHNAME, FILENAME, ALLSWELL )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 05/09/2017 14:55:33 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Walks the user through the process of picking a  drive,  path
+!           and filename to read or write.
+
+! Var_name IO Typ Description____________________________________________
+! WRITEFLG >  0/1 Whether to 0) read from or 1) write to the file.
+! HEADLINE >  Str Title-bar text
+! FILESPEC >  Str Standard filespec string:
+!                 E.g.: type : ext [, ext ][; type : ext [, ext ]]...
+!                       All Files (*.*):*.*
+!                       Excel files (*.xls):*.xls
+!                       JPEG files (*.jpg):*.jpg
+!                       Text files (*.txt):*.txt
+!                       Documents:*.txt,*.doc,*.docx
+!                       Images:*.png,*.jpg,*.jpeg,*.bmp
+! PATHNAME >< Str Can be preset with the path to start browsing.  (Soon)
+!                 Returns the path selected, if any.
+! FILENAME >< Str Can be preset with a suggested name.  (Eventually)
+!                 Returns the name chosen, if any.
+! ALLSWELL >< 0/1 Whether the user actually selected something.  We can't
+!                 rely on the initial values  of  PATHNAME  and  FILENAME
+!                 because they may not get cleared here.
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: N/A
+
+! Catalog : EMV_GET_TRM_PTH_ATW
+
+! New name: N/A
+
+   EQU IDENTITY TO 'EMV_GET_TRM_PTH_ATW'
+
+   IF IDENTITY THEN GOSUB CHECK.OUR.PARAMETERS
+   IF ALLSWELL THEN GOSUB PRIME.OUR.VARIABLES
+   IF ALLSWELL THEN GOSUB OFFER.THE.SELECTOR
+   IF ALLSWELL THEN GOSUB PARSE.THE.RESPONSE
+
+RETURN ;! to the calling program.
+
+CHECK.OUR.PARAMETERS:
+
+   IF UNASSIGNED( ALLSWELL ) THEN ALLSWELL = 1
+   IF UNASSIGNED( WRITEFLG ) THEN WRITEFLG = 0
+   IF UNASSIGNED( HEADLINE ) THEN HEADLINE = FIELD( 'Open|Save', '|', WRITEFLG + 1 )
+   IF UNASSIGNED( FILESPEC ) THEN FILESPEC = 'All Files:*.*'
+   IF UNASSIGNED( PATHNAME ) THEN PATHNAME = ''
+   IF UNASSIGNED( FILENAME ) THEN FILENAME = ''
+
+RETURN
+
+PRIME.OUR.VARIABLES:
+
+   WRITEFLG  = NOT( NOT( WRITEFLG ) )
+   ALLSWELL  = NOT( NOT( ALLSWELL ) )
+
+   CHECK_ME  = HEADLINE ; GOSUB NUTER.BAD.CHARS ; HEADLINE  = IM_FIXED
+   CHECK_ME  = FILESPEC ; GOSUB NUTER.BAD.CHARS ; FILESPEC  = IM_FIXED
+   CHECK_ME  = PATHNAME ; GOSUB NUTER.BAD.CHARS ; PATHNAME  = IM_FIXED
+   CHECK_ME  = FILENAME ; GOSUB NUTER.BAD.CHARS ; FILENAME  = IM_FIXED
+
+   PROMPT ''
+
+   VBA_CODE  = CHAR( 27 ) : CHAR( 2 ) : 'P'
+!  VBA_CODE  = 'Dim s As AccuTermClasses.Session' ;! ATW 2k2?
+   VBA_CODE := 'dim s as session'
+!  VBA_CODE := '`Set s = ActiveSession' ;! ATW 2k2?
+   VBA_CODE := '`set s = activesession'
+!  VBA_CODE := '`???' ;! CD here to preset the path?
+   VBA_CODE := '`s.Output '
+   VBA_CODE := FIELD( 'Open|Save', '|', WRITEFLG + 1 )
+   VBA_CODE := 'Filename$("' : HEADLINE : '","' : FILESPEC : '")&vbCr'
+
+RETURN
+
+NUTER.BAD.CHARS:
+
+   ! Literal quotes can foul up a VBA script, and I use the backtick for
+   ! my own purposes.
+
+   ! Ain't misbehavin' -> Ain"&Chr$(39)&"t misbehavin"&Chr$(39)&"
+
+   IM_FIXED  = CHANGE( CHECK_ME, '"', '"&Chr$(34)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, "'", '"&Chr$(39)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, '\', '"&Chr$(92)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, '`', '"&Chr$(96)&"' )
+
+   ! "&Chr$(39)&""&Chr$(39)&" -> "&Chr$(39)&Chr$(39)&"
+
+   IM_FIXED  = CHANGE( IM_FIXED, '&""&', '&' )
+
+   ! Ain"&Chr$(39)&"t misbehavin"&Chr$(39)&" -> ... 
+   ! Ain"&Chr$(39)&"t misbehavin"&Chr$(39)
+
+   IM_FIXED  = TRIM( IM_FIXED, '"', 'B' )
+   IM_FIXED  = TRIM( IM_FIXED, '&', 'B' )
+
+RETURN
+
+OFFER.THE.SELECTOR:
+
+   ECHO OFF
+
+   CRT CHANGE( VBA_CODE, '`', CHAR( 25 ) ) : CHAR( 13 ) :
+
+   INPUT RESPONSE : ;! The script enters this.
+
+   ECHO ON
+
+   ALLSWELL  = LEN( RESPONSE )
+
+RETURN
+
+PARSE.THE.RESPONSE:
+
+   FILENAME  = FIELD( RESPONSE, '\', DCOUNT( RESPONSE, '\' ) )
+   PATHNAME  = PATHNAME[ 1, LEN( PATHNAME ) - LEN( FILENAME ) ]
+
+RETURN

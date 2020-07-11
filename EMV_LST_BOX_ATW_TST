@@ -1,0 +1,35 @@
+PROGRAM EMV_LST_BOX_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/19/2014 11:10:43 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_LST_BOX_ATW.
+
+!  EQU IDENTITY TO 'EMV_LST_BOX_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   TITLEBAR = 'The Title'
+   HEAD_TXT = 'Pick yer poison!'
+   NAME_LST = CHANGE( 'One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve', '|', @AM )
+   DLG_WDTH = 8
+   DLG_HGHT = 8
+   FONT_WID = 1
+   FONT_WID = 2
+   FONT_WID = 0
+   SLCT_NUM = 4
+
+   CALL EMV_LST_BOX_ATW( TITLEBAR, HEAD_TXT, NAME_LST, DLG_WDTH, DLG_HGHT, FONT_WID, SLCT_NUM )
+
+   ALRT_TXT = 'Selection = `' : SLCT_NUM : '` (' : FIELD( NAME_LST, @AM, SLCT_NUM ) : ')'
+
+   CALL EMV_ALERT_BOX_ATW( ALRT_TXT )
+
+STOP

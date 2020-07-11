@@ -1,0 +1,95 @@
+PROGRAM EMV_CAP_VIA_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:46 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Captures an area of the screen to a file or to the clipboard.
+
+! Syntax  : EMV_CAP_VIA_ATW 0,0,79,23 "d:\path\file.txt"
+
+! Examples: EMV_CAP_VIA_ATW 0,0,79,23 "d:\path\file.txt"
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_CAP_VIA_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   CALL EMV_GET_CMD_LINE( RUN_MODE, FILENAME, PRG_NAME, CMD_LINE, EXE_MODE )
+
+   LINE_MAX = DCOUNT( CMD_LINE, @AM )
+
+   FOR LINE_NUM = 1 TO LINE_MAX
+
+      IF INDEX( CMD_LINE< LINE_NUM >, ' ', 1 ) OR INDEX( ' ', CMD_LINE< LINE_NUM >, 1 ) THEN
+
+         CMD_LINE< LINE_NUM > = '"' : CMD_LINE< LINE_NUM > : '"'
+
+      END
+
+   NEXT LINE_NUM
+
+Sub Main
+
+   CaptPath =            Format(   Year( Date ), "0000" )
+   CaptPath = CaptPath & Format(  Month( Date ),  "00"  )
+   CaptPath = CaptPath & Format(    Day( Date ),  "00"  )
+   CaptPath = CaptPath & Format(   Hour( Time ),  "00"  )
+   CaptPath = CaptPath & Format( Minute( Time ),  "00"  )
+   CaptPath = CaptPath & Format( Second( Time ),  "00"  )
+   CaptPath = CaptPath & "_Marcus_Test_000.txt"
+
+   Dim w As Session
+
+   w.SetSelection 0,0,80,24
+
+   Open CaptPath For Output As #1
+
+   Print #1, w.Selection
+
+   Close #1
+
+End Sub
+
+!  ESC STX C o p t ; path CR
+
+   CRT ESC : STX : 'C' : O : P : T : PATHNAME : FILENAME : CR :
+
+! Begin capture. Mode o may be O (overwrite),  A  (append),  N  (new  file
+! only) or C (clipboard).  Source p may be P to capture  printed  data  or
+! null to capture received data.  t may be T (text) to capture  text  only
+! (filters out control characters) or null for no filtering.  Path is  the
+! drive, directory and file name where the captured data is to be  stored.
+! All characters  received  (or  printed)  are  stored  in  the  file  (or
+! clipboard) until capturing is disabled (via local or remote command).
+
+! Note: when capturing to the clipboard, path is ignored.
+
+!  ESC STX C X
+
+! End capture.  The file containing the captured data is closed.
+
+!  ESC STX jS , ID , col , row , width , height , page CR
+
+   CRT ESC : STX : EXE_MODE : CMD_LINE : CR :
+
+! Saves a copy of the specified screen  block  (text,  colors  and  visual
+! effects) and terminal state in memory and associates the block with  the
+! specified identifier (ID) which can be an arbitrary alpha-numeric string
+! (may not contain commas). Any number of screen blocks can be saved.  Col
+! and row specify the upper-left corner of the block. If either is omitted
+! or null, zero is assumed. Width and  height  specify  the  size  of  the
+! block. If width or height is omitted or null, the screen width or height
+! is used. Page optionally specifies the terminal page for the block,  and
+! if omitted or null, the current page is used.
+
+STOP

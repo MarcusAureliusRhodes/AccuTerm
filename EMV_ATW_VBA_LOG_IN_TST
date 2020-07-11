@@ -1,0 +1,68 @@
+PROGRAM EMV_ATW_VBA_LOG_IN_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:16 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Demonstrate AccuTerm leading the user to  a  profile,  loading
+!           the profile, and automatically connecting to, and logging into
+!           the system.
+
+! Syntax  : EMV_ATW_VBA_LOG_IN_TST
+
+! (Options: None
+
+! Examples: EMV_ATW_VBA_LOG_IN_TST
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: EMV_ATW_VBA_LOG_IN_TST
+
+   EQU IDENTITY TO 'EMV_ATW_VBA_LOG_IN_TST'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   VBA_CODE       = 'On Error Resume Next'
+   VBA_CODE< -1 > = 'BasePath$=MacroDir$' ;! = path of current .atcf
+   VBA_CODE< -1 > = 'ConfPath$=BasePath$&"\UserInfo.txt"'
+   VBA_CODE< -1 > = 'If FileExists(ConfPath$) Then'
+   VBA_CODE< -1 > =    'Open ConfPath$ For Input As #ConfFile'
+   VBA_CODE< -1 > =    'Input #ConfFile,ATCFPath$'
+   VBA_CODE< -1 > =    'Close #ConfFile'
+   VBA_CODE< -1 > = 'Else'
+   VBA_CODE< -1 > =    'ATCFPath$=GetFilePath$("","atcf",BasePath$,"Locate the Thinqware profile to use.",0)'
+   VBA_CODE< -1 > =    'Open ConfPath$ For Output As #ConfFile'
+   VBA_CODE< -1 > =    'Print #ConfFile,ATCFPath$'
+   VBA_CODE< -1 > =    'Close #ConfFile'
+   VBA_CODE< -1 > = 'End If'
+   VBA_CODE< -1 > = 'Set s=Sessions.Add(ATCFPath$,2,1,0)'
+   VBA_CODE< -1 > = 's.Reset atResetTerminal'
+   VBA_CODE< -1 > = 's.InputMode=1'
+   VBA_CODE< -1 > = 's.SetSelection 0,0,80,24'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"login:")'
+   VBA_CODE< -1 > = 's.Output "marcus"&vbCr'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"password:")'
+   VBA_CODE< -1 > = 's.Output "Ma28735487!"&vbCr'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"marcus@jupiter:~$")'
+   VBA_CODE< -1 > = 's.Output "./goqm"&vbCr'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"(Enter=done)")'
+   VBA_CODE< -1 > = 's.Output vbCr'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"Device    :")'
+   VBA_CODE< -1 > = 's.Output "LOGTO CMI"&vbCr'
+   VBA_CODE< -1 > = 'PrmptNum=s.WaitFor(1,9,"(Enter=done)")'
+   VBA_CODE< -1 > = 's.InputMode=0'
+   VBA_CODE< -1 > = 's.Output vbCr'
+   VBA_CODE< -1 > = 's.Output "WHO"&vbCr'
+   VBA_CODE< -1 > = 's.Output BasePath$&vbCr'
+   VBA_CODE< -1 > = 's.Output ConfPath$&vbCr'
+   VBA_CODE< -1 > = 's.Output ATCFPath$&vbCr'
+
+   CRT @( -10 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+STOP

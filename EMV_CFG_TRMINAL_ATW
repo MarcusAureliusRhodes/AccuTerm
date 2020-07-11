@@ -1,0 +1,385 @@
+PROGRAM EMV_CFG_TRMINAL_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:16 by Marcus
+
+! Platform: D3; Any OS; AccuTerm; Any emulation
+
+! Function: Queries AccuTerm for its term-type setting, querying the
+!           user if not AccuTerm.
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_CFG_TRMINAL_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB START_THE_VARIABLES ELSE CHAIN 'OFF'
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB QUERY_FOR_ACCUTERM  ELSE CHAIN 'OFF'
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB QUERY_FOR_SHARE     ELSE CHAIN 'OFF'
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB SETUP_FOR_TERM_TYPE ELSE CHAIN 'OFF'
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB STORE_THE_SETTINGS  ELSE CHAIN 'OFF'
+
+STOP
+
+START_THE_VARIABLES:
+
+   USER_NAME = OCONV( 'U', 'U50BB' )
+   USER_PORT = SYSTEM( 22 )
+
+   CALL EMV_GET_ACCOUNT( ACCT_NAME )
+
+   IF ACCT_NAME EQ '' THEN
+
+      ACCT_NAME = 'DM'
+
+   END
+
+   CALL EMV_GET_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, TRUE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+   PORT_INFO< 20 > = ''
+   PORT_INFO< 21 > = ''
+   PORT_INFO< 22 > = ''
+
+   CALL EMV_STORE_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, FALSE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+   ! Setup a format code for the width of the screen.
+
+   PRINTING = SYSTEM( 1 )
+
+   PRINTER OFF
+
+   TEXT_FMT = 'L#' : ( SYSTEM( 2 ) - 1 )
+
+   PRINTER PRINTING
+
+   CALL EMV_GET_REC( 'EMV,CTL', IDENTITY, 0, 0, 0, '', FALSE, FALSE, FALSE, EMV_CTLS, CONTROL_LIST, SUCCESSFUL )
+
+RETURN
+
+QUERY_FOR_ACCUTERM:
+
+   ! Speed & timing issue require us to code the following in-line instead of using subroutines.
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+   CRT ESC : STX : 'P Dim s As Session' : EM : 'Set s = ActiveSession' : EM : 's.Output "Y"' : CR : LF : BELL : @( -27 ) : @( 0 ) : @( -13 ) : 'Are you using AccuTerm? (N/Y)' TEXT_FMT : @( -14 ) : @( 31 ) :
+
+   INPUT USING_ACCUTERM, 1 :
+
+   CRT @( -27 ) : @( 0 ) : @( -4 ) : @( -28 ) :
+
+   USING_ACCUTERM  = USING_ACCUTERM EQ 'Y'
+   PORT_INFO< 20 > = USING_ACCUTERM
+
+   CALL EMV_STORE_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, FALSE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+RETURN
+
+QUERY_FOR_SHARE:
+
+   HST_PATHNAME = CONTROL_LIST< 1, 1 >
+   TRM_PATHNAME = CONTROL_LIST< 2, 1 >
+
+   IF USING_ACCUTERM AND HST_PATHNAME NE '' AND TRM_PATHNAME NE '' THEN
+
+      TST_FILENAME = IDENTITY : '_' : USER_PORT : '.txt'
+      DATETIME_GRP = DATE() 'R%5' : TIME() 'R%5'
+
+      CRT @( -2 ) : ESC : STX : '>echo ' : DATETIME_GRP : '>' : TRM_PATHNAME : '\' : TST_FILENAME
+
+      SLEEP 2
+
+      CALL EMV_GET_REC( HST_PATHNAME, TST_FILENAME, 0, 0, 0, '', FALSE, TRUE, FALSE, SHARED_FILES, SHARE_TEST, SUCCESSFUL )
+
+      CALL EMV_ERASE_REC( HST_PATHNAME, TST_FILENAME, FALSE, SHARED_FILES, SUCCESSFUL )
+
+      CRT @( -2 ) : ESC : STX : '>del ' : TRM_PATHNAME : '\' : TST_FILENAME
+
+   END
+
+   PORT_INFO< 23 > = SHARE_TEST[ 1, 10 ] EQ DATETIME_GRP
+
+   CALL EMV_STORE_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, FALSE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+RETURN
+
+SETUP_FOR_TERM_TYPE:
+
+   IF USING_ACCUTERM THEN
+
+      GOSUB SETUP_FOR_ACCUTERM
+      GOSUB CHECK_FOR_DOWNLOADS
+
+   END ELSE
+
+      GOSUB SETUP_FOR_OTHERS
+
+   END
+
+RETURN
+
+SETUP_FOR_ACCUTERM:
+
+   LOOP
+
+      CRT @( -27 ) : @( 0 ) : ESC : STX : 'P Dim s As Session' : EM : 'Set s = ActiveSession' : EM : 's.Output Environ("USERPROFILE")&"|"&vbCr'
+
+      INPUT USER_PROFILE
+
+      CRT @( 0 ) : '' TEXT_FMT : @( -14 ) : @( 0 ) : @( -28 ) :
+
+   UNTIL USER_PROFILE[ LEN( USER_PROFILE ), 1 ] EQ '|' DO REPEAT
+
+   USER_PROFILE = FIELD( USER_PROFILE, '|', 1 )
+
+   IF USER_PROFILE EQ '' THEN
+
+      USER_PROFILE = 'C:'
+
+   END
+
+   IF USER_PROFILE[ LEN( USER_PROFILE ) - 12, 13 ] NE '\My Documents' THEN
+
+      USER_PROFILE := '\My Documents'
+
+   END
+
+   HOME_DRIVE = USER_PROFILE[ 1,   2 ]
+   HOME_PATH  = USER_PROFILE[ 3, 999 ]
+
+   PORT_INFO< 20 > = USING_ACCUTERM
+   PORT_INFO< 21 > = 'HOMEDRIVE' : VM : 'HOMEPATH'  : VM : 'USERPROFILE'
+   PORT_INFO< 22 > =  HOME_DRIVE : VM :  HOME_PATH  : VM :  USER_PROFILE
+
+   CALL EMV_STORE_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, FALSE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+   VBA_CODE       = 'Dim s As AccuTermClasses.Session'
+   VBA_CODE< -1 > = 'Set s = ActiveSession'
+   VBA_CODE< -1 > = 's.Caption = "' : OCONV( OCONV( 'LOCALHOST', 'TDICT DM,HOSTS,;X;1;1' ), 'MCT' ) : ', '  : ACCT_NAME : ', '  : USER_NAME : ' ('  : OCONV( USER_NAME, 'TUSERS;X;1;1' ) : '), ' : USER_PORT : '"'
+   VBA_CODE< -1 > = 's.TermType = atTermVT320'
+   VBA_CODE< -1 > = 's.Ansi8Bit = False'
+   VBA_CODE< -1 > = 's.AnsiAppCursor = False'
+   VBA_CODE< -1 > = 's.AnsiAppKeypad = False'
+   VBA_CODE< -1 > = 's.Answerback = ""'
+   VBA_CODE< -1 > = 's.AsciiDelay = 350'
+   VBA_CODE< -1 > = 's.AsciiEOL = 0'
+   VBA_CODE< -1 > = 's.AutoAnswer = False'
+   VBA_CODE< -1 > = 's.AutoClose = True'
+   VBA_CODE< -1 > = 's.BkspSendsDel = False'
+   VBA_CODE< -1 > = 's.CursorType = True'
+   VBA_CODE< -1 > = 's.Duplex = atDuplexFULL'
+   VBA_CODE< -1 > = 's.ExtCols = 160'
+   VBA_CODE< -1 > = 's.ExtRows = 60'
+   VBA_CODE< -1 > = 's.GmodeEnable = True'
+   VBA_CODE< -1 > = 's.Icon = "c:\Progra~1\ATWin\ha.ico"'
+   VBA_CODE< -1 > = 's.FKeys(112) = vbCr&"?"&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(113) = vbCr&"#"&vbCr&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(114) = "/"&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(115) = vbCr&"#"&vbCr'
+   VBA_CODE< -1 > = 's.LegibleFont = False'
+   VBA_CODE< -1 > = 's.NormCols = 80'
+   VBA_CODE< -1 > = 's.NormRows = 24'
+   VBA_CODE< -1 > = 's.ScaleFont = True'
+   VBA_CODE< -1 > = 's.SlavePrintMode = False'
+   VBA_CODE< -1 > = 's.Sound = ""'
+   VBA_CODE< -1 > = 's.TelnetAltBreak = True'
+   VBA_CODE< -1 > = 's.TelnetNoDelay = True'
+   VBA_CODE< -1 > = 's.ZmodemAuto = 1'
+   VBA_CODE< -1 > = 'AccuTerm.Activate'
+   VBA_CODE< -1 > = 's.Activate'
+   VBA_CODE< -1 > = 'AccuTerm.RecentListSize = 1'
+   VBA_CODE< -1 > = 'AccuTerm.SingleInstance = True'
+   VBA_CODE< -1 > = 'AccuTerm.StatusLineVisible = False'
+   VBA_CODE< -1 > = 'AccuTerm.ToolbarVisible = False'
+   VBA_CODE< -1 > = 'AccuTerm.NoCloseWarning = False'
+   VBA_CODE< -1 > = 'AccuTerm.AutoClose = True'
+   VBA_CODE< -1 > = 's.Changed = False'
+   VBA_CODE< -1 > = 's.Save'
+   VBA_CODE< -1 > = 's.Output CStr(s.TermType)&"|"&CStr(s.Cols)&"|"&CStr(s.Rows)&vbCr'
+
+   CALL EMV_POP_DLG_ATW( THE_RESULTS, VBA_CODE )
+
+   TRM_TYPE  = THE_RESULTS< 1 >
+   TRM_WDTH  = THE_RESULTS< 2 >
+   TRM_HGHT  = THE_RESULTS< 3 >
+
+   BEGIN CASE
+
+      CASE TRM_TYPE EQ  0 ; TRM_TYPE = 'TTY'
+      CASE TRM_TYPE EQ  1 ; TRM_TYPE = 'VP-A2'
+      CASE TRM_TYPE EQ  2 ; TRM_TYPE = 'VP-60'
+      CASE TRM_TYPE EQ  3 ; TRM_TYPE = 'VP-A2'
+      CASE TRM_TYPE EQ  4 ; TRM_TYPE = 'VP-A2'
+      CASE TRM_TYPE EQ  5 ; TRM_TYPE = 'WY-50-132'
+      CASE TRM_TYPE EQ  6 ; TRM_TYPE = 'WY60'
+      CASE TRM_TYPE EQ  7 ; TRM_TYPE = 'VT-52'
+      CASE TRM_TYPE EQ  8 ; TRM_TYPE = 'VT320'
+      CASE TRM_TYPE EQ  9 ; TRM_TYPE = 'ANSI'
+      CASE TRM_TYPE EQ 10 ; TRM_TYPE = 'MM-MON'
+      CASE TRM_TYPE EQ 11 ; TRM_TYPE = 'TV910'
+      CASE TRM_TYPE EQ 12 ; TRM_TYPE = 'VT100'
+      CASE TRM_TYPE EQ 13 ; TRM_TYPE = 'VT320'
+      CASE TRM_TYPE EQ 14 ; TRM_TYPE = 'VT320'
+      CASE TRM_TYPE EQ 15 ; TRM_TYPE = 'ANSI'
+      CASE TRM_TYPE EQ 16 ; TRM_TYPE = 'ANSI'
+
+   END CASE
+
+   SET_FILENAME = 'Set_' : USER_PORT : '.txt'
+   SET_FULLNAME = '"' : USER_PROFILE : '\' : SET_FILENAME : '"'
+
+   ATTEMPT = -1
+
+   LOOP
+
+      ATTEMPT += 1
+
+      CALL EMV_SLINE_MSG_CONTINUE( 'Checking ... ' : ATTEMPT )
+
+      CRT @( -2 ) : ESC : STX : '>set>'                                                     : SET_FULLNAME ; SLEEP ATTEMPT
+      CRT @( -2 ) : ESC : STX : '>ipconfig>>'                                               : SET_FULLNAME ; SLEEP ATTEMPT
+      CRT @( -2 ) : ESC : STX : '>dir "' : HOME_DRIVE : '\Program Files\excel.exe" /s /b>>' : SET_FULLNAME ; SLEEP ATTEMPT
+      CRT @( -2 ) : ESC : STX : '>echo EOF>>'                                               : SET_FULLNAME ; SLEEP ATTEMPT
+
+      CALL EMV_GET_REC( USER_PROFILE, SET_FILENAME, 0, 0, 0, '', FALSE, TRUE, FALSE, THE_LISTS, TERM_INFO, SUCCESSFUL )
+
+      IF TERM_INFO[ LEN( TERM_INFO ) - 2, 3 ] EQ 'EOF' THEN
+
+         CONTINUING = TRUE
+
+      END ELSE
+
+         CONTINUING = FALSE
+
+      END
+
+   UNTIL CONTINUING OR ATTEMPT GT 3 DO REPEAT
+
+   CRT @( -27 ) : @( 0 ) : @( -4 ) : @( -28 ) :
+
+   CALL EMV_ERASE_REC( 'POINTER-FILE', SET_FILENAME : USER_PORT, FALSE, THE_LISTS, SUCCESSFUL )
+
+   CRT @( -2 ) : ESC : STX : '>del ' : SET_FULLNAME
+
+   CONVERT '=' TO VM IN TERM_INFO
+
+   NUM_LINES = DCOUNT( TERM_INFO, AM )
+   VAL_NUM   = 0
+
+   FOR LINE_NUM = 1 TO NUM_LINES
+
+      BEGIN CASE
+
+         CASE TERM_INFO< LINE_NUM, 2 > NE ''
+
+            VAL_NUM += 1
+
+            PORT_INFO< 21, VAL_NUM > = TERM_INFO< LINE_NUM, 1 >
+            PORT_INFO< 22, VAL_NUM > = TERM_INFO< LINE_NUM, 2 >
+
+         CASE INDEX( OCONV( TERM_INFO< LINE_NUM >, 'MCU' ), 'IP ADDRESS', 1 )
+
+            NEW_ADDRESS = TRIM( FIELD( TERM_INFO< LINE_NUM >, ':', 2 ) )
+
+            ITS_VALID  = NUM( FIELD( NEW_ADDRESS, '.', 1 ) )
+            ITS_VALID := NUM( FIELD( NEW_ADDRESS, '.', 2 ) )
+            ITS_VALID := NUM( FIELD( NEW_ADDRESS, '.', 3 ) )
+            ITS_VALID := NUM( FIELD( NEW_ADDRESS, '.', 4 ) )
+            ITS_VALID := NEW_ADDRESS NE '0.0.0.0'
+            ITS_VALID := NOT( NOT( INDEX( NEW_ADDRESS, '.', 3 ) ) )
+
+            IF ITS_VALID EQ '111111' THEN
+
+               VAL_NUM += 1
+
+               PORT_INFO< 21, VAL_NUM > = 'IP_ADDRESS'
+               PORT_INFO< 22, VAL_NUM > =   NEW_ADDRESS
+
+               CALL EMV_STORE_REC( 'USERS', USER_NAME, 4, 5, 0, '', FALSE, FALSE, FALSE, THE_USERS, NEW_ADDRESS, SUCCESSFUL )
+
+            END
+
+         CASE OCONV( TERM_INFO< LINE_NUM >, 'MCU' )[ 1, 3 ] EQ HOME_DRIVE : '\' AND INDEX( OCONV( TERM_INFO< LINE_NUM >, 'MCU' ), 'EXCEL.EXE', 1 )
+
+            VAL_NUM += 1
+
+            PORT_INFO< 21, VAL_NUM > = 'SPREADSHEET_PRG'
+            PORT_INFO< 22, VAL_NUM > =   TERM_INFO< LINE_NUM >
+
+      END CASE
+
+   NEXT LINE_NUM
+
+RETURN
+
+CHECK_FOR_DOWNLOADS:
+
+   CALL EMV_GET_REC( 'EMV,CTL', IDENTITY : '_DOWNLOADS', 0, 0, 0, '', FALSE, FALSE, FALSE, EMV_CTLS, DLOAD_LIST, SUCCESSFUL )
+
+   NUM_DLOADS = DCOUNT( DLOAD_LIST, AM )
+
+   FOR DLOAD_NUM = 2 TO NUM_DLOADS WHILE SUCCESSFUL
+
+      THE_LISTNAME = DLOAD_LIST< DLOAD_NUM, 1 >
+      SRC_FILENAME = DLOAD_LIST< DLOAD_NUM, 2 >
+      SRC_ITEMNAME = DLOAD_LIST< DLOAD_NUM, 3 >
+      TGT_PATHNAME = DLOAD_LIST< DLOAD_NUM, 4 >
+      TGT_FILENAME = DLOAD_LIST< DLOAD_NUM, 5 >
+
+      CALL EMV_CHK_LST_REC( 'POINTER-FILE', THE_LISTNAME, USER_NAME, 'AL', TRUE, FALSE, FALSE, THE_LISTS, ATT_NUM, ADDED, SUCCESSFUL )
+
+      IF ADDED AND USING_ACCUTERM THEN
+
+         IF INDEX( SRC_FILENAME, '/', 1 ) THEN
+
+            CALL EMV_DLD_VIA_SMB( SRC_FILENAME, SRC_ITEMNAME, TGT_PATHNAME, TGT_FILENAME, SUCCESSFUL )
+
+         END ELSE
+
+            CALL EMV_DLD_VIA_ATW( SRC_FILENAME, SRC_ITEMNAME, TGT_PATHNAME, TGT_FILENAME )
+
+         END
+
+      END
+
+   NEXT DLOAD_NUM
+
+RETURN
+
+SETUP_FOR_OTHERS:
+
+   TRM_TYPE = 'VT100'
+
+   CALL EMV_GET_CRT_SIZE( TRM_WDTH, TRM_HGHT )
+
+   CALL EMV_SLINE_GET_STRING( 'Enter your term-type'  , TRM_TYPE, '', SUCCESSFUL )
+   CALL EMV_SLINE_GET_STRING( 'Enter your term width' , TRM_WDTH, '', SUCCESSFUL )
+   CALL EMV_SLINE_GET_STRING( 'Enter your term height', TRM_HGHT, '', SUCCESSFUL )
+
+   IF TRM_TYPE EQ ''               THEN TRM_TYPE = 'VT100'
+   IF NUM( TRM_WDTH ) AND TRM_WDTH ELSE TRM_WDTH = 80
+   IF NUM( TRM_HGHT ) AND TRM_HGHT ELSE TRM_HGHT = 25
+
+RETURN
+
+STORE_THE_SETTINGS:
+
+   CALL EMV_STORE_REC( 'PIBS', USER_PORT, 0, 0, 0, '', FALSE, FALSE, FALSE, THE_PORTS, PORT_INFO, SUCCESSFUL )
+
+   EXECUTE 'TERM ' : TRM_TYPE : ',' : TRM_WDTH : ',' : TRM_HGHT : ',,,,,142,60'
+
+   CRT @( -1 ) :
+
+RETURN

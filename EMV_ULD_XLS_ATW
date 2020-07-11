@@ -1,0 +1,391 @@
+SUBROUTINE EMV_ULD_XLS_ATW( SRC_PATH, SRC_FILE, XCL_BOOK, SUCCESSFUL )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/16/2014 21:51:10 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Returns any Excel workbook from any PC-accessible dir in a
+!           variable.
+
+! xcl_book
+! 001 worksheet 1 name]a1\a2\a3\...]b1\b2\b3\...]c1\c2\bc\...]...
+! 002 worksheet 2 name]a1\a2\a3\...]b1\b2\b3\...]c1\c2\bc\...]...
+! 003 worksheet 3 name]a1\a2\a3\...]b1\b2\b3\...]c1\c2\bc\...]...
+! ...
+
+! If src_path and/or src_file are empty, the user  is  prompted  with  the
+! Windows file-selector.  If the user aborts the file-selector, successful
+! is set to false.   Otherwise, the selected file's various tabs are  saved
+! to the user's download directory ,  as  defined  in  AccuTerm,  as  tab-
+! delimited files.   These are then imported to xcl_book, and deleted  from
+! the download directory.
+
+   EQU IDENTITY TO 'EMV_ULD_XLS_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   CONTINUING = @TRUE
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB CHECK.OUR.PARAMETERS
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB PRIME.OUR.VARIABLES
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB FETCH.THE.FILENAME
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB MOUNT.XCL.WORKBOOK
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB ULOAD.XCL.WORKBOOK
+
+RETURN ;! to the calling program.
+
+CHECK.OUR.PARAMETERS:
+
+   IF ASSIGNED( SRC_PATH ) ELSE SRC_PATH = ''
+   IF ASSIGNED( SRC_FILE ) ELSE SRC_FILE = ''
+   IF ASSIGNED( XCL_BOOK ) ELSE XCL_BOOK = ''
+
+RETURN
+
+PRIME.OUR.VARIABLES:
+
+   EQU STX      TO CHAR(  2 )
+   EQU TAB      TO CHAR(  9 )
+   EQU LF       TO CHAR( 10 )
+   EQU CR       TO CHAR( 13 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   PROMPT ''
+
+!  ECHO_STATE = SYSTEM(24)
+
+   VBA_CODE       = 'dim s as accutermclasses.session'
+   VBA_CODE< -1 > = 'set s = activesession'
+   VBA_CODE< -1 > = 's.output s.DefaultXferDir'
+   VBA_CODE< -1 > = 's.output vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT TGT_PATH ;! the VBA script enters this
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+   IF TGT_PATH EQ '' THEN
+
+      CALL EMV_ALERT_BOX( "Set Default Up/Download dir in tab 9 of AccuTerm's settings dlog" )
+
+      CONTINUING = @FALSE
+
+   END
+
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATINITOBJMGR( ERRMSG, OPTS )                                      ; GOSUB CHECK.FOR.ERRORS
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATCREATEOBJECT( 'scripting.filesystemobject', FSO, ERRMSG, OPTS ) ; GOSUB CHECK.FOR.ERRORS
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATCREATEOBJECT( 'wscript.shell', WSHELL, ERRMSG, OPTS )           ; GOSUB CHECK.FOR.ERRORS
+
+   OPEN 'VOC' TO THE_MDS ELSE
+
+      CONTINUING = @FALSE
+
+   END
+
+RETURN
+
+FETCH.THE.FILENAME:
+
+   IF SRC_PATH NE '' THEN
+
+      CALL ATINVOKEMETHOD( FSO, 'folderexists', SRC_PATH, PATH_EXISTS, ERRMSG, OPTS )
+
+      IF PATH_EXISTS EQ 'True' THEN
+
+         IF SRC_FILE NE '' THEN
+
+            CALL ATINVOKEMETHOD( FSO, 'fileexists', SRC_PATH : '\' : SRC_FILE, FILE_EXISTS, ERRMSG, OPTS )
+
+            IF FILE_EXISTS EQ 'True' ELSE
+
+                  SRC_FILE = ''
+
+            END
+
+         END
+
+      END ELSE
+
+         SRC_PATH = ''
+
+      END
+
+   END
+
+   IF SRC_PATH EQ '' OR SRC_FILE EQ '' THEN
+
+      SAVING   = @FALSE ;! because we're 'opening', not 'saving'
+      DLOG_LBL = 'Select Excel file to import'
+      FILESPEC = 'Excel files (*.xls*):*.xls*'
+
+      CALL EMV_GET_TRM_PATHNAME( SAVING, DLOG_LBL, FILESPEC, SRC_PATH, SRC_FILE, SUCCESSFUL )
+
+      CONTINUING = LEN( SRC_FILE )
+
+   END
+
+RETURN
+
+MOUNT.XCL.WORKBOOK:
+
+   ! Open the excel file, grab the first sheet
+
+   SRC_PATH = TRIM( SRC_PATH, '\', 't' )
+   TGT_PATH = TRIM( TGT_PATH, '\', 't' )
+
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATCREATEOBJECT( 'excel.application', EXCELAPPLICATION, ERRMSG, OPTS )                  ; GOSUB CHECK.FOR.ERRORS
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATSETPROPERTY( EXCELAPPLICATION, 'displayalerts' , 0, ERRMSG, OPTS )                   ; GOSUB CHECK.FOR.ERRORS
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATGETPROPERTY( EXCELAPPLICATION, 'workbooks', WORKBOOKS, ERRMSG, OPTS )                ; GOSUB CHECK.FOR.ERRORS
+   IF CONTINUING AND SUCCESSFUL THEN CALL ATINVOKEMETHOD( WORKBOOKS, 'open', SRC_PATH : '\' : SRC_FILE, WORKBOOK, ERRMSG, OPTS ) ; GOSUB CHECK.FOR.ERRORS
+
+   IF CONTINUING AND SUCCESSFUL AND WORKBOOK GT 0 THEN
+
+      CALL ATGETPROPERTY( WORKBOOK, 'worksheets', WORKSHEETS, ERRMSG, OPTS )
+
+   END ELSE
+
+      ERRMSG = 'Can not open "' : SRC_PATH : '\' : SRC_FILE : '"'
+
+   END
+
+   GOSUB CHECK.FOR.ERRORS
+
+RETURN
+
+ULOAD.XCL.WORKBOOK:
+
+   XCL_BOOK = ''
+   PAGE_LST = ''
+   PAGE_NUM = 0
+
+   ! Gather all the tabs into a single, dynamic array
+
+   LOOP
+
+      PAGE_NUM += 1
+
+      CALL ATGETPROPERTY( WORKSHEETS, 'item' : @SM : PAGE_NUM, THISWORKSHEET, ERRMSG, OPTS )
+
+   WHILE CONTINUING AND SUCCESSFUL AND ERRMSG NE 'subscript out of range' DO
+
+      GOSUB ULOAD.XCL.WORKSHEET
+
+   REPEAT
+
+   GOSUB CLOSE.THE.FILE
+   GOSUB CLOSE.THE.PROGRAM
+   GOSUB ERASE.PRE.EXISTING.FILE
+
+   CALL ATRELEASEOBJECT( EXCELAPPLICATION, ERRMSG, OPTS )
+
+   GOSUB CHECK.FOR.ERRORS
+
+   CALL ATRESETOBJMGR
+
+RETURN
+
+ULOAD.XCL.WORKSHEET:
+
+   GOSUB FETCH.TAB.PROPERTY
+   GOSUB WRITE.TXT.FILE
+   GOSUB ULOAD.TXT.FILE
+
+RETURN
+
+FETCH.TAB.PROPERTY:
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+      CALL ATGETPROPERTY( THISWORKSHEET, 'name', TAB_NAME, ERRMSG, OPTS )
+
+      CALL EMV_SLINE_MSG_CONTINUE( 'Uploading tab ' : PAGE_NUM : ' (' : TAB_NAME : ')' )
+
+      GOSUB CHECK.FOR.ERRORS
+
+   END
+
+RETURN
+
+WRITE.TXT.FILE:
+
+   PAGE_LST< PAGE_NUM > = IDENTITY : '_' : SYSTEM( 22 ) 'r%3_' : PAGE_NUM 'r%3.txt'
+
+   GOSUB ERASE.PRE.EXISTING.FILE
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+      CALL ATINVOKEMETHOD( THISWORKSHEET, 'saveas', TGT_PATH : '\' : PAGE_LST< PAGE_NUM > : @SM : '21', RESULT, ERRMSG, OPTS )
+
+      GOSUB CHECK.FOR.ERRORS
+
+      IF CONTINUING AND SUCCESSFUL THEN
+
+         CALL ATRELEASEOBJECT( THISWORKSHEET, ERRMSG, OPTS )
+
+         GOSUB CHECK.FOR.ERRORS
+
+         IF CONTINUING AND SUCCESSFUL THEN
+
+         CALL ATINVOKEMETHOD( FSO, 'fileexists', TGT_PATH : '\' : PAGE_LST< PAGE_NUM >, FILE_EXISTS, ERRMSG, OPTS )
+
+         IF FILE_EXISTS EQ 'False' THEN
+
+               CALL EMV_SLINE_MSG_WAIT( 'Can not write to "' : TGT_PATH : '"' )
+
+               SUCCESSFUL = @FALSE
+
+         END
+
+         END
+
+      END ELSE
+
+         CALL EMV_SLINE_MSG_WAIT( 'Can not write to "' : TGT_PATH : '"' )
+
+      END
+
+   END
+
+RETURN
+
+ERASE.PRE.EXISTING.FILE:
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+      CALL ATINVOKEMETHOD( FSO, 'fileexists', TGT_PATH : '\' : PAGE_LST< PAGE_NUM >, FILE_EXISTS, ERRMSG, OPTS )
+
+      IF FILE_EXISTS EQ 'True' THEN
+
+         CALL ATINVOKEMETHOD( FSO, 'deletefile', TGT_PATH : '\' : PAGE_LST< PAGE_NUM >, RESULT, ERRMSG, OPTS )
+
+         GOSUB CHECK.FOR.ERRORS
+
+      END
+
+   END
+
+RETURN
+
+ULOAD.TXT.FILE:
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+!     CRT STSROW_1 : @( TRM_WDTH - 1 ) :
+
+      ! Beg Pick AP ==================== Generic Pick ====================
+      ! End Pick AP ==================== Generic Pick ====================
+      ! Beg Pick D3 ================ Rocket Software's D3 ================
+
+      DATA 'R', 'K', TGT_PATH, PAGE_LST< PAGE_NUM >, 'MD', PAGE_LST< PAGE_NUM >
+
+      EXECUTE 'FT'
+
+      ! End Pick D3 ================ Rocket Software's D3 ================
+      ! Beg Pick IC ================ InsterSytems' Cache =================
+      ! End Pick IC ================ InsterSytems' Cache =================
+      ! Beg Pick JB =================== Zumasys' jBase ===================
+
+      DATA 'R', 'K', TGT_PATH, PAGE_LST< PAGE_NUM >, 'MD', PAGE_LST< PAGE_NUM >
+
+      EXECUTE 'FT'
+
+      ! End Pick JB =================== Zumasys' jBase ===================
+      ! Beg Pick NR ================ Northgate's Reality =================
+      ! End Pick NR ================ Northgate's Reality =================
+      ! Beg Pick ON ======= Onware Software Corporations's Onware ========
+      ! End Pick ON ======= Onware Software Corporations's Onware ========
+      ! Beg Pick QM ================ Ladybridge's OpenQM =================
+
+      DATA 'R', 'K', TGT_PATH, PAGE_LST< PAGE_NUM >, 'MD', PAGE_LST< PAGE_NUM >
+
+      EXECUTE 'FT'
+
+      ! End Pick QM ================ Ladybridge's OpenQM =================
+      ! Beg Pick UD ============= Rocket Software's UniData ==============
+
+      EXECUTE 'FT',//IN.<'R' : @AM : 'K' : @AM : TGT_PATH : @AM : PAGE_LST< PAGE_NUM > : @AM : 'MD' : @AM : PAGE_LST< PAGE_NUM >
+
+      ! End Pick UD ============= Rocket Software's UniData ==============
+      ! Beg Pick UV ============= Rocket Software's UniVerse =============
+
+      EXECUTE 'FT',//IN.<'R' : @AM : 'K' : @AM : TGT_PATH : @AM : PAGE_LST< PAGE_NUM > : @AM : 'MD' : @AM : PAGE_LST< PAGE_NUM >
+
+      ! End Pick UV ============= Rocket Software's UniVerse =============
+      ! Beg Pick VU =============== ViaSystems' UniVision ================
+      ! End Pick VU =============== ViaSystems' UniVision ================
+
+!     CRT STSROW_0 :
+
+      READ THE_DATA FROM THE_MDS, PAGE_LST< PAGE_NUM > THEN
+
+         XCL_BOOK< -1 > = TAB_NAME : @VM : CHANGE( CHANGE( THE_DATA, TAB, @SM ), @AM, @VM )
+
+         DELETE THE_MDS, PAGE_LST< PAGE_NUM >
+
+      END
+
+   END
+
+RETURN
+
+CLOSE.THE.FILE:
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+      CALL ATINVOKEMETHOD( WORKBOOK, 'close', '', RESULT, ERRMSG, OPTS )
+
+      GOSUB CHECK.FOR.ERRORS
+
+   END
+
+RETURN
+
+CLOSE.THE.PROGRAM:
+
+   IF CONTINUING AND SUCCESSFUL THEN
+
+      CALL ATINVOKEMETHOD( EXCELAPPLICATION, 'quit' , '', RESULT, ERRMSG, OPTS )
+
+      GOSUB CHECK.FOR.ERRORS
+
+   END
+
+RETURN
+
+CHECK.FOR.ERRORS:
+
+   IF ERRMSG EQ '' ELSE
+
+      CALL EMV_SLINE_MSG_CONTINUE( 'windows/object bridge error: ' : FIELD( ERRMSG< 1 >, LF, 1 ) )
+
+      CALL ATINVOKEMETHOD( WORKBOOK        , 'close', '', RESULT, ERRMSG, OPTS )
+      CALL ATINVOKEMETHOD( EXCELAPPLICATION, 'quit' , '', RESULT, ERRMSG, OPTS )
+      CALL ATRELEASEOBJECT( EXCELAPPLICATION, ERRMSG, OPTS )
+      CALL ATRESETOBJMGR
+
+      SLEEP 1
+
+      CONTINUING = @FALSE
+      SUCCESSFUL = @FALSE
+
+   END
+
+RETURN

@@ -1,0 +1,74 @@
+SUBROUTINE EMV_MSG_BOX_ATW( RESPONSE, TTL_TEXT, MSG_TEXT, ICON_TYP, DBUTTONS, DFLT_BTN )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 12/02/2019 17:53:00 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Shows MSG_TEXT in an AccuTerm VBA MsgBox,  under  the  title,
+!           TTL_TEXT, over the button(s) specified by DBUTTONS.
+
+! Var_name IO Typ Description____________________________________________
+! MSG_TEXT >< Str The text to be displayed in a message-box. If absent, a
+!                 substitute message is displayed, and returned, instead.
+! RESPONSE  < Str The button selected
+! ICON_TYP >  Int 0=None
+!                 1=Stop
+!                 2=Qestion
+!                 3=Attention
+!                 4=Information
+! DBUTTONS >  Int 0=Ok
+!                 1=Ok/Cancel
+!                 2=Abort/Retry/Ignore
+!                 3=Yes/No/Cancel
+!                 4=Yes/No
+!                 5=Retry/Cancel
+! DFLT_BTN >  Int 0=1st button
+!                 1=2nd button
+!                 2=3rd button
+
+! Upcoming:
+
+   EQU IDENTITY TO 'EMV_MSG_BOX_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF ASSIGNED( TTL_TEXT ) ELSE TTL_TEXT = ''
+   IF ASSIGNED( MSG_TEXT ) ELSE MSG_TEXT = ''
+   IF ASSIGNED( ICON_TYP ) ELSE ICON_TYP = '0'
+   IF ASSIGNED( DBUTTONS ) ELSE DBUTTONS = '0'
+   IF ASSIGNED( DFLT_BTN ) ELSE DFLT_BTN = '1'
+
+   IF      LEN( TTL_TEXT ) ELSE TTL_TEXT = '??? No title ???'
+   IF      LEN( MSG_TEXT ) ELSE MSG_TEXT = '??? No message ???'
+   IF      LEN( ICON_TYP ) ELSE ICON_TYP = '0'
+   IF      LEN( DBUTTONS ) ELSE DBUTTONS = '0'
+   IF      LEN( DFLT_BTN ) ELSE DFLT_BTN = '1'
+
+   DLG_TYPE  = DBUTTONS + ICON_TYP * 16 + DFLT_BTN * 256
+
+   VBA_CODE       = 'dim s as accutermclasses.session'
+   VBA_CODE< -1 > = 'set s = activesession'
+!  VBA_CODE< -1 > = 'MsgBox "' : CHANGE( MSG_TEXT, @AM, '"&vbCrLf&"' ) : '",' : DLG_TYPE : ',"' : TTL_TEXT : '"'
+   VBA_CODE< -1 > = 's.Output CStr(MsgBox("' : CHANGE( MSG_TEXT, @AM, '"&vbCrLf&"' ) : '",' : DLG_TYPE : ',"' : TTL_TEXT : '"))'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   CRT @( 0, 0 ) : CHAR( 27 ) : CHAR( 2 ) : 'P' : CHANGE( VBA_CODE, @AM, CHAR( 25 ) )
+
+   ECHO OFF
+
+   INPUT RESPONSE, 1 :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+   RESPONSE = CHANGE( 'OK|CANCEL|ABORT|RETRY|IGNORE|YES|NO', '|', @AM )< RESPONSE >
+
+RETURN ;! to the calling program.

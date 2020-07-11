@@ -1,0 +1,509 @@
+Sub Main
+' 12/04/2018 14:01:56 mr
+Dim p$(94)
+p(0)="jBASE debugger->"
+p(1)="sh CMI ~ -->"
+p(2)="Enter I to Ignore, R to Retry , Q to Quit :"
+p(3)="<E>nter New Email Address  <Enter>=Accept Email Address Displayed  X=Go Back"
+p(4)="<ENTER> = page, B-ack, X-exit, C-hange, P-ackMsg, RU-Rules, S-hipIns, F-ile,"
+p(5)="<ENTER> = next page  A = Attn / RU = Rules / H = help / B = Back / Q = quit"
+p(6)="<ENTER> = page, B-ack, X = exit, C-hange, RU = Rules, P-ackMsg, F-ile"
+p(7)="ENTER Customer Number  H=Help  S=Search  A=Add New Customer  Q=Quit"
+p(8)="Sales Order Confirmation has been emailed...press enter to continue"
+p(9)="<ENTER> = next page  A = Attn / RU = Rules / H = help / B = Back"
+p(10)="<ENTER> continue, # Add or Change, H-elp, Q-uit, X=Go Back:"
+p(11)="<ENTER> to continue / <#> to Change / <H>elp / <B>=Back :"
+p(12)="H=help / L=list / X=back / Q=quit order / END=finished"
+p(13)="<ENTER> continue, # Add or Change, H-elp, Q-uit, X=Go"
+p(14)="H=help / L=list / Q=quit order/ X=back / END=finished"
+p(15)="Do you want to <F>ax or <E>mail order confirmation ?"
+p(16)="ENTER Customer Number  H=Help  S=Search  Q=Quit"
+p(17)="OK to File and Send Email Confirmation (Y/N)?"
+p(18)="ENTER Customer Number  H=Help  S=Search"
+p(19)="The product is on temporary hold until"
+p(20)="/ RU=Rules / H=help / B=Back / Q=quit"
+p(21)="Are you SURE you want to Quit  Y/N :"
+p(22)="RU=Rules / H=help / B=Back / Q=quit"
+p(23)="Not a valid C.M.I. Customer Number"
+p(24)="*** Enter Y or N to continue **"
+p(25)="*** Press ENTER to continue ***"
+p(26)="H=help / S=PROD Search / X=back"
+p(27)="H=help <Enter>=NA X=back Q=Quit"
+p(28)="Send Invoice to Email Address:"
+p(29)="Send Copy of Invoice? (Y/N):"
+p(30)="Place Order on Hold Y/<N>? :"
+p(31)="You may not select customer"
+p(32)="The UOM on this product is"
+p(33)="Custom Device tracking #:"
+p(34)="Take another Order  Y/N ?"
+p(35)="Current or Default (C/D)"
+p(36)="Press ENTER to continue"
+p(37)="to purchase product in"
+p(38)="is on the PRICE PAUSE"
+p(39)="Logging you off....."
+p(40)="CANNOT USE OBSOLETE"
+p(41)="is transitioning to"
+p(42)="Accept Hold? (Y/N)"
+p(43)="Continue? (Y/N)"
+p(44)="Expiration Date"
+p(45)="Are you sure ?"
+p(46)="records copied"
+p(47)="Base Reason :"
+p(48)="X=back Q=Quit"
+p(49)="OK to SAVE? :"
+p(50)="Enter Option"
+p(51)="END=finished"
+p(52)="EMAIL NOTES:"
+p(53)="Base Reason"
+p(54)="Q = quit"
+p(55)="NA = NA"
+p(56)="Option:"
+p(57)="Q=Quit"
+p(58)="X=back"
+p(59)="2.  :"
+p(60)="1.  :"
+p(61)="TO :"
+p(62)=""
+p(63)="--------------------------------------------------------------------------------"
+p(64)="================================================================================"
+p(65)="!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+Dim w As Session
+InitSession.Activate
+Set w=ActiveSession
+w.Reset atResetTerminal
+w.InputMode=0
+HomePath=cstr(Environ("USERPROFILE"))
+p(70)=HomePath&"\Documents"
+p(71)=p(70)&"\UserInfo.txt"
+p(72)=p(70)&"\CustList.txt"
+p(73)=p(70)&"\ProdList.txt"
+p(74)=p(70)&"\SummTemp.txt"
+Close
+p(82)="False"
+p(67)="9"
+Begin Dialog UserDialog 280,230,"Test Menu"
+PushButton 10,20,260,22,"Reset databases"
+PushButton 10,50,260,22,"Xfer approvals from GARS to GPW"
+PushButton 10,80,260,22,"Run Test 005 (Domestic Order)"
+PushButton 10,110,260,22,"Run Test 006 (Foreign Order)"
+PushButton 10,140,260,22,"Run Test 012 (Nightly Purge)"
+PushButton 10,170,260,22,"Help"
+PushButton 10,200,260,22,"Quit"
+End Dialog
+Dim MainMenu As UserDialog
+MenuDone=False
+Call OpenCapt(w,p)
+Call NextStep(w,"MENU",p)
+Do
+UserSays=CStr(Dialog(MainMenu,7))
+Select Case UserSays
+Case 1
+Call ResetData(w,p)
+Case 2
+Call XferData(w,p)
+Case 3
+p(77)="1"
+p(78)="Domestic Order"
+p(69)="005"
+Call DomesticOrder(w,p)
+Case 4
+p(77)="11"
+p(78)="Foreign Order"
+p(69)="006"
+Call DomesticOrder(w,p)
+Case 5
+p(77)="1"
+p(78)="Nightly Purge"
+p(69)="012"
+Call DomesticOrder(w,p)
+Case 6
+Call ShowHelp
+Case Else
+MenuDone=True
+End Select
+Loop Until MenuDone
+End Sub
+Sub StartVariables(w,p)
+End Sub
+Sub ResetData(w,p)
+p(69)="Reset_Data"
+Call OpenCapt(w,p)
+Call NextStep(w,"TCL",p)
+Call NextStep(w,"COPY CMI-WACIM-BAK * (O",p)
+p(67)="300"
+Call NextStep(w,"(CMI-WACIM",p)
+p(67)="9"
+Call NextStep(w,"cp -f /data/files/cmi/GCR.DATA.BAK /data/files/cmi/GCR.DATA",p)
+Call NextStep(w,"cp -f /data/files/cmi/GCR.DATA.BAK /data/files/cmi/GCR.DATA",p)
+Call NextStep(w,"cp -f /data/files/cmi/GCR.DEFINITION.BAK /data/files/cmi/GCR.DEFINITION",p)
+Call NextStep(w,"cp -f /data/files/cmi/WAC-CLM.BAK /data/files/cmi/WAC-CLM",p)
+Call NextStep(w,"cp -f /data/files/cmi/WAC-IM-AVAIL.BAK /data/files/cmi/WAC-IM-AVAIL",p)
+Call NextStep(w,"cp -f /data/files/cmi/WAC-RESTRICTIONS.BAK /data/files/cmi/WAC-RESTRICTIONS",p)
+Call NextStep(w,"cp -f /data/files/cmi/WACCM.BAK /data/files/cmi/WACCM",p)
+Call NextStep(w,"cp -f /data/files/cmi/WACCM-SHIP-ADDRS.BAK /data/files/cmi/WACCM-SHIP-ADDRS",p)
+Call NextStep(w,"cp -f /data/files/cmi/WACIR.BAK /data/files/cmi/WACIR",p)
+p(67)="60"
+Call NextStep(w,"cp -f /data/files/cmi/WACO.BAK /data/files/cmi/WACO",p)
+p(67)="99"
+Call NextStep(w,"MENU",p)
+Close #1
+Shell("C:\Windows\notepad.exe "&p(70),vbMaximizedFocus)
+End Sub
+Sub XferData(w,p)
+End Sub
+Sub DomesticOrder(w,p)
+p(79)=CStr(Time)
+p(80)=CStr(-1)
+p(81)=CStr(-1)
+If FileExists(p(72)) Then
+Open p(72) For Input As #3
+Do
+Input #3,p(75)
+p(80)=CStr(CInt(p(80))+1)
+Loop Until p(75)="EOF"
+Close #3
+Else
+MsgBox "Customer File does not exist. Download from https://confluence.cookgroup.nao/display/JTOCI/jBTO+GARS+Automation to "&p(72),vbOkOnly,"Error"
+p(82)="True"
+End If
+If FileExists(p(73)) Then
+Open p(73) For Input As #4
+Do
+Input #4,p(76)
+p(81)=CStr(CInt(p(81))+1)
+Loop Until p(76)="EOF"
+Close #4
+Else
+MsgBox "Product File does not exist. Download from https://confluence.cookgroup.nao/display/JTOCI/jBTO+GARS+Automation to "&p(73),vbOkOnly,"Error"
+p(82)="True"
+End If
+p(69)="Domestic_Order_(005)"
+Call OpenCapt(w,p)
+Call NextStep(w,p(77),p)
+Call NextStep(w,"1",p)
+Open p(74) For Output As #5
+Open p(72) For Input As #3
+For Cust_Idx=1 To p(80)
+p(84)=""
+Input #3,p(75)
+Call CheckCust(w,p)
+If CInt(p(83))=1 Then
+Call EnterCust(w,p)
+Open p(73) For Input As #4
+For Prod_Idx=1 To p(81)
+Input #4,p(76)
+Call CheckProd(w,p)
+If CInt(p(83))=1 Then
+Call EnterOrder(w,p)
+End If
+Call UpdateSummary(w,p)
+Next Prod_Idx
+Close #4
+Call NextStep(w,"Q",p)
+Call NextStep(w,"Y",p)
+Call NextStep(w,"Y",p)
+End If
+Next Cust_Idx
+Close #3
+Call NextStep(w,"Q",p)
+Call NextStep(w,"Q",p)
+Call NextStep(w,"OFF",p)
+p(85)=CStr(Time)
+p(86)=CStr(CInt(p(85))-CInt(p(79)))
+Print #1,p(92)
+Print #1,""
+Print #1,"                    "&p(78)&" ("&p(69)&") Test Summary Report"
+Print #1,""
+Print #1,"Report Path : "&p(70)
+Print #1,""
+Print #1,"Username    : "&p(88)
+Print #1,"Start Time  : "&Format(CInt(p(79)),"hh:mm:ss")
+Print #1,"End Time    : "&Format(CInt(p(85)),"hh:mm:ss")
+Print #1,"Elapsed Time: "&Format(CInt(p(86)),"hh:mm:ss")
+Print #1,""
+Print #1,p(80)&" customers"
+Print #1,p(81)&" products"
+Print #1,(CInt(p(80))*CInt(p(81)))&" potential tests"
+Print #1,""
+Print #1,"Actual"
+Print #1,"Test # Customer   Product        Outcome"
+Print #1,p(92)
+Print #5,"EOF"
+Close #5
+Open p(74) For Input As #5
+Test_Num=0
+Do
+Input #5,Temp$
+If Temp$="EOF" Then
+Exit Do
+Else
+Test_Num=Test_Num+1
+Print #1,Right("      "&Str(Test_Num)&"  ",7)&Temp$
+End If
+Loop
+Print #1,p(92)
+Close #1
+Close #5
+Shell("C:\Windows\notepad.exe "&p(70),vbMaximizedFocus)
+End Sub
+Sub ShowHelp
+HelpText$="Reset databases ... copies the `snapshot` database files over the current files in order to restore the system to a standard state for testing."&vbCr&vbCr
+HelpText$=HelpText$&"Xfer approvals from GARS to GPW ... transfers pending approvals from GARS to GPW so orders can be created with them."&vbCr&vbCr
+HelpText$=HelpText$&"Run Test 005 (Domestic Order) ... starts the domestic product ordering test script."&vbCr&vbCr
+HelpText$=HelpText$&"Run Test 006 (Foreign Order) ... starts the international product ordering test script."&vbCr&vbCr
+HelpText$=HelpText$&"Run Test 012 (Nightly Purge) ... starts the test of the nightly purge using the domestic order script."
+MsgBox HelpText$,vbOkOnly,"The buttons do the following..."
+End Sub
+Sub CheckCust(w,p)
+Call NextStep(w,p(75),p)
+Select Case CInt(p(83))
+Case 2
+p(83)="1"
+Case 3
+p(84)=p(84)&"Obsolete customer; "
+Call NextStep(w,"",p)
+Case 4
+p(84)=p(84)&"Invalid customer; "
+Call NextStep(w,"",p)
+Case 5
+w.SetSelection 20,9,62,16
+p(84)=p(84)&Replace(Replace(Replace(w.Selection,vbLf," "),vbCr," "),"  "," ",1,100)&"; "
+Call NextStep(w,"",p)
+p(83)="2"
+Case 6
+p(84)=p(84)&"Customer on price-pause; "
+Call NextStep(w,"",p)
+Case 7
+Call NextStep(w,"",p)
+Select Case p(83)
+Case "2"
+Call NextStep(w,"Q",p)
+End Select
+End Select
+p(76)=""
+Call UpdateSummary(w,p)
+End Sub
+Sub EnterCust(w,p)
+Call NextStep(w,"",p)
+Call NextStep(w,"JOHN SMITH",p)
+Call NextStep(w,"RECEIVING",p)
+Call NextStep(w,"3171234567",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"mrhodes@robertetusa.com",p)
+Call NextStep(w,"",p)
+Call NextStep(w,p(89),p)
+If p(83)="3" Then
+Call NextStep(w,"Y",p)
+End If
+Call NextStep(w,"V",p)
+Call NextStep(w,"1234567890123456",p)
+Call NextStep(w,"JOHN SMITH",p)
+Call NextStep(w,"0817",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"",p)
+If p(83)="3" Then
+p(83)="1"
+End If
+Call NextStep(w,"5",p)
+If p(83)="3" Or p(83)="4" Then
+p(83)="1"
+End If
+End Sub
+Sub StoreInfo(w,p)
+p(90)=CStr(CInt(p(90))+1)
+p(89)=Replace$(p(88)&p(90)," ","")
+Open p(71) For Output As #2
+Print #2,p(88)
+Print #2,PassWord$
+Print #2,p(90)
+Print #2,ATCFPath$
+Close 2
+End Sub
+Sub CheckProd(w,p)
+Call CheckProdPart2(w,p(76),p)
+End Sub
+Sub CheckProdPart2(w,Dummy$,p)
+p(76)=Dummy$
+Call NextStep(w,p(76),p)
+Select Case p(83)
+Case "2"
+p(66)="C"
+Call CheckProdPart2(w,p(76),p)
+p(83)="1"
+Case "3"
+Wait 0.2
+w.SetSelection 0,21,80,22
+Call AppendSelection(w,p)
+Case "4"
+p(84)=p(84)&"Product on hold; "
+p(66)="Y"
+Call CheckProdPart2(w,p(76),p)
+Case "5"
+Wait 0.2
+w.SetSelection 20,9,62,16
+Call AppendSelection(w,p)
+p(66)=""
+Call CheckProdPart2(w,p(76),p)
+Case "6"
+p(84)=p(84)&"Custom Device Tracking #; "
+Call NextStep(w,"100",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"5",p)
+Case "7"
+If DomOrInt="1" Then
+p(83)="1"
+Else
+p(83)="1"
+End If
+Case "8"
+Call NextStep(w,"Y",p)
+Case "9"
+End Select
+End Sub
+Sub EnterOrder(w,p)
+Call NextStep(w,"",p)
+Call NextStep(w,"END",p)
+If p(83)="3" Then
+Call NextStep(w,"",p)
+Call NextStep(w,"U",p)
+Call NextStep(w,"1",p)
+Call NextStep(w,"JOHN SMITH",p)
+Call NextStep(w,"3171234567",p)
+End If
+Call NextStep(w,"",p)
+Call NextStep(w,"N",p)
+Call NextStep(w,"Robertet Testing",p)
+Call NextStep(w,"",p)
+If p(77)="11" Then
+Call NextStep(w,"",p)
+Call NextStep(w,"",p)
+End If
+Call NextStep(w,"",p)
+Call NextStep(w,"F",p)
+Select Case p(83)
+Case "2"
+Call NextStep(w,"C",p)
+Case "3"
+Call NextStep(w,"Y",p)
+End Select
+Call NextStep(w,"Y",p)
+Call NextStep(w,"mrhodes@robertetusa.com",p)
+Call NextStep(w,"Y",p)
+w.SetSelection 20,16,30,16
+p(91)=w.Selection
+If p(83)="3" Then
+End If
+Call NextStep(w,"E",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"ROBERTET TESTING",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"Y",p)
+Call NextStep(w,"",p)
+Call NextStep(w,"Y",p)
+Call NextStep(w,p(75),p)
+Call EnterCust(w,p)
+p(84)=p(84)&"Successfully ordered ("&p(91)&"); "
+End Sub
+Sub OpenCapt(w,p)
+p(70)=p(70)&Format(Year(Date),"0000")
+p(70)=p(70)&Format(Month(Date),"00")
+p(70)=p(70)&Format(Day(Date),"00")
+p(70)=p(70)&Format(Hour(Time),"00")
+p(70)=p(70)&Format(Minute(Time),"00")
+p(70)=p(70)&Format(Second(Time),"00")
+p(70)=p(70)&"_Marcus_Test_000.txt"
+Open p(70) For Output As #1
+End Sub
+Sub AppendSelection(w,p)
+p(84)=p(84)&Replace(Replace(Replace(w.Selection,vbLf," "),vbCr," "),"  "," ",1,100)&"; "
+End Sub
+Sub NextStep(w,Dummy,p)
+p(66)=Dummy
+If p(82)="False" Then
+w.SetSelection 0,0,80,24
+If p(66)="Do Nothing!" Then
+p(68)=w.Selection
+Print #1,p(68)
+Print #1,p(92)
+Print #1,""
+Print #1,p(92)
+Else
+w.Output p(66)
+p(68)=w.Selection
+Print #1,p(68)
+Print #1,p(92)
+Print #1,p(66)&"{Enter}"
+Print #1,p(92)
+w.Output vbCr
+End If
+z=w.WaitFor(0,CInt(p(67))," ",":",">","[",Chr$(27))
+Wait 0.2
+p(68)=w.Selection
+For X=0 To 99
+FindThis$=p(X)
+If FindThis$="" Then
+p(83)="-1"
+Exit For
+Else
+If InStr(1,Replace(Replace(p(68),vbCr,"|"),vbLf,"|"),FindThis$) Then
+p(83)=CStr(X)
+Exit For
+End If
+End If
+Next X
+Select Case p(83)
+Case "-1"
+Call BreakOff(w,p)
+Case "0"
+Call BreakOff(w,p)
+End Select
+End If
+End Sub
+Sub BreakOff(w,p)
+w.SetSelection 0,0,80,24
+Print #1,w.Selection
+Print #1,p(92)
+Print #1,"!!!!!!!!!TIMED OUT WAITING FOR ONE OF THE FOLLOWING RESPONSES TO APPEAR!!!!!!!!!"
+For X=0 To 99
+If p(X)="" Then
+Exit For
+Else
+Print #1,"Prompts("&Right$("  "&Str$(X),2)&") = `"&p(X)&"`"
+End If
+Next X
+Print #1,p(65)
+Print #1,p(92)
+p(84)="ABORTED!"
+Call UpdateSummary(w,p)
+Call NextStep(w,ChrW$(3),p)
+Call NextStep(w,"Q",p)
+Call NextStep(w,"Y",p)
+Call NextStep(w,"Q",p)
+Call NextStep(w,"OFF",p)
+p(82)="True"
+End Sub
+Sub UpdateSummary(w,p)
+If Len(p(84)) Then
+Print #5,Left$(p(75)&"           ",11)&Left$(p(76)&"              ",14)&" -- "&p(84)
+Else
+If Len(p(76)) Then
+Print #5,Left$(p(75)&"           ",11)&Left$(p(76)&"              ",14)&" -- Successfully ordered ("&p(91)&"); "
+End If
+End If
+p(84)=""
+End Sub
+Sub DebugDump(w,p)
+Debug.Print p(92)
+Debug.Print p(68)
+Debug.Print p(92)
+Debug.Print p(66)&" ==> "&p(83)&" `"&p(CInt(p(83)))&"`"
+Debug.Print p(92)
+For X=0 To 99
+If p(X)="" Then
+Exit For
+Else
+Debug.Print "Prompts("&Right$("  "&Str$(X),2)&") = `"&p(X)&"`"
+End If
+Next X
+Debug.Print p(92)
+End Sub

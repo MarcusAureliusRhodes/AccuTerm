@@ -1,0 +1,89 @@
+PROGRAM EMV_CFG_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:10 by Marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function: Sets up Marcus' session (especially AccuTerm settings)
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_CFG_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   TRM_WDTH = 160
+   TRM_HGHT = 60
+
+   VBA_CODE       = 'Dim s As AccuTermClasses.Session'
+   VBA_CODE< -1 > = 'Set s                      = ActiveSession'
+   VBA_CODE< -1 > = 's.Ansi8Bit                 = False'
+   VBA_CODE< -1 > = 's.AnsiAppCursor            = False'
+   VBA_CODE< -1 > = 's.AnsiAppKeypad            = False'
+   VBA_CODE< -1 > = 's.Answerback               = ""'
+   VBA_CODE< -1 > = 's.AsciiDelay               = 350'
+   VBA_CODE< -1 > = 's.AsciiEOL                 = 0'
+   VBA_CODE< -1 > = 's.AutoAnswer               = False'
+   VBA_CODE< -1 > = 's.AutoClose                = True'
+   VBA_CODE< -1 > = 's.BkspSendsDel             = False'
+   VBA_CODE< -1 > = 's.Caption                  = "' : OCONV( 'U', 'U50BB' ) : '"'
+   VBA_CODE< -1 > = 's.CursorType               = True'
+   VBA_CODE< -1 > = 's.Duplex                   = atDuplexFULL'
+   VBA_CODE< -1 > = 's.ExtCols                  = ' : TRM_WDTH : ''
+   VBA_CODE< -1 > = 's.ExtRows                  = ' : TRM_HGHT : ''
+   VBA_CODE< -1 > = 's.GmodeEnable              = True'
+!  VBA_CODE< -1 > = 's.Icon                     = "c:\Progra1\ATWin\ha.ico"'
+   VBA_CODE< -1 > = 's.FKeys(112)               = vbCr&"?"&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(113)               = vbCr&"#"&vbCr&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(114)               = "/"&vbCr'
+   VBA_CODE< -1 > = 's.FKeys(115)               = vbCr&"#"&vbCr'
+!  VBA_CODE< -1 > = 's.KeepaliveInterval        = 10'   ;! Not on 2K2?
+   VBA_CODE< -1 > = 's.LegibleFont              = False'
+   VBA_CODE< -1 > = 's.NormCols                 = 80'
+   VBA_CODE< -1 > = 's.NormRows                 = 24'
+   VBA_CODE< -1 > = 's.PasteEOFChar             = 0'
+   VBA_CODE< -1 > = 's.PasteEOFMode             = 0'
+   VBA_CODE< -1 > = 's.PasteEOLChar             = 13'
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 0'    ;! CR
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 1'    ;! LF
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 3'    ;! TAB
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 5'    ;! PasteEOLChar
+   VBA_CODE< -1 > = 's.PasteEOLMode             = 128'  ;! CR except last line
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 129'  ;! LF except last line
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 131'  ;! TAB except last line
+!  VBA_CODE< -1 > = 's.PasteEOLMode             = 133'  ;! PasteEOLChar except last line
+   VBA_CODE< -1 > = 's.ScaleFont                = False'
+   VBA_CODE< -1 > = 's.ScrMode                  = 1'
+   VBA_CODE< -1 > = 's.SlavePrintMode           = False'
+   VBA_CODE< -1 > = 's.Sound                    = ""'
+   VBA_CODE< -1 > = 's.TelnetAltBreak           = True'
+!  VBA_CODE< -1 > = 's.TelnetKeepaliveIsNOP     = True' ;! Not on 2K2?
+   VBA_CODE< -1 > = 's.TelnetNoDelay            = True'
+   VBA_CODE< -1 > = 's.TermType                 = atTermVT320'
+   VBA_CODE< -1 > = 's.ZmodemAuto               = 1'
+   VBA_CODE< -1 > = 's.MessageRows              = 1'
+   VBA_CODE< -1 > = 'AccuTerm.Activate'
+   VBA_CODE< -1 > = 's.Activate'
+   VBA_CODE< -1 > = 'AccuTerm.RecentListSize    = 1'
+   VBA_CODE< -1 > = 'AccuTerm.SingleInstance    = True'
+   VBA_CODE< -1 > = 'AccuTerm.StatusLineVisible = False'
+   VBA_CODE< -1 > = 'AccuTerm.ToolbarVisible    = False'
+   VBA_CODE< -1 > = 'AccuTerm.NoCloseWarning    = False'
+   VBA_CODE< -1 > = 'AccuTerm.AutoClose         = True'
+   VBA_CODE< -1 > = 's.Changed                  = False'
+!  VBA_CODE< -1 > = 's.Save'
+!  VBA_CODE< -1 > = 's.Output CStr(s.TermType)&"|"&CStr(s.Cols)&"|"&CStr(s.Rows)&vbCr'
+
+   CRT ESC : STX : 'P ' : CHANGE( TRIM( VBA_CODE ), @AM, EM ) : CR :
+
+   CHAIN 'TERM ' : TRM_WDTH : ',' : TRM_HGHT
+
+STOP

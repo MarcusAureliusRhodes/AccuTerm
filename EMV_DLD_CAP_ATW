@@ -1,0 +1,834 @@
+PROGRAM EMV_DLD_CAP_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 10/29/2018 09:34:07 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Downloads any/all items from the specified Pick database to a
+!           single file, or individual files on your PC`s hard-drive,  in
+!           a location of your choice (defaulting to your home  [C:\Users
+!           \yourid\Documents] directory), optionally trimming any trail-
+!           ing space from the end of each item and/or from  the  end  of
+!           each line in each item, and all via AccuTerm`s screen-capture
+!           (i.e: with NO help from any of their host programs).
+
+!           Useful for backing up your  work,  for  moving  data  between
+!           systems, or for editing off-line.
+
+!           Also works with an active list of selections.
+
+! Required parameters: Database name
+
+! Optional parameters: List-id or Item-id(s), download Path
+
+! (Options: A(ll-trim) removes all forms of blank space from the  end  of
+!            the item and every line
+!           D(iscrete) downloads each database item to a separate OS file
+!            in a path of directories reflecting the account,  file,  and
+!            data partition names.
+!           E(xtension) appends .txt to the download filename(s)
+!           J(ust pad with spaces) pads the  empty  lines  in  uploadable
+!            files with single spaces instead of the more elaborate  !~`,
+!            reducing complexity, saving space and time,  making  it  the
+!            better option for source-code, whereas the !~` is the better
+!            choice for data items which might legitimately have a single
+!            space in a line that ought not  be  removed  once  uploaded.
+!            (The !~` is easily, and necessarily removed from an uploaded
+!            item, but a  single  space  can  be  left  without  negative
+!            impact.)
+!            Overrides U.
+!           L(remove LFs) from every line
+!           N(remove New-lines [CR : LF]) from every line
+!           R(emove CRs) from every line
+!           S(paces) and value-marks get removed from  the  end  of  each
+!            item
+!           T(imestamp) appends a date-/time-stamp to the  name  of  each
+!            downloaded file in the format CCYYMMDDHHmmSS)
+!           U(ploadable) makes each  downloaded  file  easier  to  upload
+!            again via copy-n-paste by prepending ...
+!             DELETE {filename} {itemname}     (remove any existing item)
+!             ED {filename} {itemname}          (start the system editor)
+!             I                                       (start insert-mode)
+!             ... and then appending ...
+!             {null line}                              (exit insert-mode)
+!             T                             (jump to the top of the item)
+!             RU999999|{placeholder}|{^}|       (reinstate any ctl-chars)
+!             FI                (save the item and exit the sytem editor)
+!            Blank lines are preserved by inserting  a  single  character
+!            which is otherwise not present in the original  item.  These
+!            unique characters  are  then  replaced   with   null-string,
+!            restoring the empty line to the item.
+
+! Syntax  : EMV_DLD_CAP_ATW Dbase[ Path][ List-id|Item-id[ Item-id[ Item-id[...]]]][ ([A][D][E][J][R][S][T][U]]
+
+! Examples: EMV_DLD_CAP_ATW BP (AS
+!           EMV_DLD_CAP_ATW DICT CUSTOMERS C:\Users\myfiles\Documents (T
+!           EMV_DLD_CAP_ATW ORDERS C:\Users\myfiles\Documents (T
+!           GET-LIST MYLIST
+!           EMV_DLD_CAP_ATW VENDORS C:\Users\myfiles\Documents
+!           EMV_DLD_CAP_ATW WAC-RESTRICTIONS "E:\Deskto...MI\GARS~CAPA" (A
+!           EMV_DLD_CAP_ATW DICT CMI-WACIM "E:\q...\DICT~CMI-WACIM.txt" (A
+!           EMV_DLD_CAP_ATW DICT CMI-WACIM "E:\qm" (A
+!           EMV_DLD_CAP_ATW DICT WACCM "E:\qm" (A
+!           EMV_DLD_CAP_ATW DICT WACCM-SHIP-ADDRS "E:\qm" (A
+!           EMV_DLD_CAP_ATW WACCM-SHIP-ADDRS "E:\qm" (A
+!           EMV_DLD_CAP_ATW EMV,LIB E:\qm (AC
+!           EMV_DLD_CAP_ATW EMV,LIB E:\qm (ACJ
+!           EMV_DLD_CAP_ATW EMV,DEV E:\qm\EMV\EMV\DEV (AEJRTU
+!           EMV_DLD_CAP_ATW EMV,DEV E:\qm (ADR
+!           EMV_DLD_CAP_ATW EMV,LIB C:\Users\MRhodes\Documents\qm\CMI\EMV\LIB (ADR
+!           EMV_DLD_CAP_ATW EMV,DEV C:\Users\MRhodes\Documents\qm\CMI\EMV\DEV (ADR
+!           EMV_DLD_CAP_ATW EMV,DEV C:\Users\MRhodes\Documents\qm (AEJRT
+!           EMV_DLD_CAP_ATW EMV,DEV C:\Users\MRhodes\Documents\qm (ADRS
+!           EMV_DLD_CAP_ATW MO.BP C:\Users\MRhodes\Documents\RFI\WED\dev (ADLRS
+!           EMV_DLD_CAP_ATW SOHEADER C:\Users\MRhodes\Documents\RFI\WED\prd (ARSU
+
+
+!           The resulting download file(s) can be uploaded anytime  using
+!           AccuTerm`s `Paste From...` feature (on the Edit menu).
+
+! Upcoming: (V-ersion option that downloads items only when they are  new
+!           or different  from   the   PC's   versions,   appending   the
+!           yyyymmddhhmmss of the original versions to their filenames to
+!           prevent overwriting them.
+
+!           (U-nattended option  that  won't  show  dialog/message  boxes
+!           (because they require a user to dismiss them before  continu-
+!           ing).
+
+!           Account-save (EMV_DLD_CAP_ATW *) with a  (File  option  which
+!           saves all the items in each Pick file to  a  single  PC  file
+!           (the default operation in single-file mode),  as  opposed  to
+!           the account-save's default mode of operation which creates  a
+!           single file on the PC containing all the data in the account.
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_DLD_CAP_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB FETCH.OUR.PARAMETERS
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB MERGE.CMD.QUOTES
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB FETCH.SRC.FILE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB MOUNT.SRC.FILE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB FETCH.OUT.PATH
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB ROUTE.IAW.ITEMNAMES
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB DLOAD.THE.ITEMS
+
+STOP
+
+FETCH.OUR.PARAMETERS:
+
+   ! Beg Pick AP ===================== Generic Pick =====================
+   ! End Pick AP ===================== Generic Pick =====================
+   ! Beg Pick D3 ================= Rocket Software's D3 =================
+   ! End Pick D3 ================= Rocket Software's D3 =================
+   ! Beg Pick IC ================= InsterSytems' Cache ==================
+   ! End Pick IC ================= InsterSytems' Cache ==================
+   ! Beg Pick JB ==================== Zumasys' jBase ====================
+
+!  CMD_LINE  = TRIM( CHANGE( FIELD( SYSTEM( 1000 ), '(', 1 ), ',' : @AM, ',' ), @AM, 'B' )
+!  OPTN_STR  = TRIM( CHANGE( FIELD( SYSTEM( 1000 ), '(', 2 ), ',' : @AM, ',' ), @AM, 'B' )
+
+!  OUR_ACCT_NAME  = SYSTEM( 19 )
+
+   ! End Pick JB ==================== Zumasys' jBase ====================
+   ! Beg Pick NR ================= Northgate's Reality ==================
+   ! End Pick NR ================= Northgate's Reality ==================
+   ! Beg Pick ON ======== Onware Software Corporations's Onware =========
+   ! End Pick ON ======== Onware Software Corporations's Onware =========
+   ! Beg Pick QM ================= Ladybridge's OpenQM ==================
+
+!  CMD_LINE  = TRIM( CHANGE( FIELD( @SENTENCE, '(', 1 ), ' ', @AM ), @AM, 'B' )
+!  OPTN_STR  = FIELD( @SENTENCE, '(', 2 )
+
+!  OUR_ACCT_NAME  = @WHO
+
+   ! End Pick QM ================= Ladybridge's OpenQM ==================
+   ! Beg Pick UD ============== Rocket Software's UniData ===============
+   ! End Pick UD ============== Rocket Software's UniData ===============
+   ! Beg Pick UV ============== Rocket Software's UniVerse ==============
+
+   CMD_LINE  = TRIM( CHANGE( FIELD( @SENTENCE, '(', 1 ), ' ', @AM ), @AM, 'B' )
+   OPTN_STR  = FIELD( @SENTENCE, '(', 2 )
+
+   OUR_ACCT_NAME  = @WHO
+
+   ! End Pick UV ============== Rocket Software's UniVerse ==============
+   ! Beg Pick VU ================ ViaSystems' UniVision =================
+   ! End Pick VU ================ ViaSystems' UniVision =================
+
+   TRIM_ALL  = INDEX( OPTN_STR, 'A', 1 ) ;! Trims all attributes
+   DISCRETE  = INDEX( OPTN_STR, 'D', 1 ) ;! Download to discrete items
+   NAME_EXT  = INDEX( OPTN_STR, 'E', 1 ) ;! Add .txt to the filename(s)
+   JUSTSPCS  = INDEX( OPTN_STR, 'J', 1 ) ;! Just space empty lines
+   STRIPCRS  = INDEX( OPTN_STR, 'R', 1 ) ;! Strip CRs
+   STRIPLFS  = INDEX( OPTN_STR, 'L', 1 ) ;! Strip LFs
+   STRIPNLS  = INDEX( OPTN_STR, 'N', 1 ) ;! Strip New-lines (CRs & LFs)
+   TRIMMING  = INDEX( OPTN_STR, 'S', 1 ) ;! Trim the ends of the items
+   TIMESTMP  = INDEX( OPTN_STR, 'T', 1 ) ;! Timestamp download files(s)
+   ULOADABL  = INDEX( OPTN_STR, 'U', 1 ) ;! Uploadable download file(s)
+   CAPTURNG  = @FALSE
+
+!  ULOADABL  = ULOADABL OR JUSTSPCS
+
+   DEL CMD_LINE< 1 > ;! Drop the program name (which is always first on jBase)
+
+   IF INDEX( CMD_LINE, ':\', 2 ) THEN
+
+      MSG_TEXT  = 'Multiple output paths are not allowed.|' : CMD_LINE
+
+      GOSUB POPUP.MSG.BOX
+
+   END
+
+RETURN
+
+MERGE.CMD.QUOTES:
+
+   ! Reunite any quoted elements (most likely the output path)
+
+   LOOP
+
+      QUOTES_2  = INDEX( CMD_LINE, '"', 2 )
+
+   WHILE QUOTES_2 DO
+
+      CMD_LINE  = FIELD( CMD_LINE, '"', 1 ) : ' ' : CHANGE( FIELD( CMD_LINE, '"', 2 ), @AM, ' ' ) : ' ' : CMD_LINE[ QUOTES_2 + 1, LEN( CMD_LINE ) ]
+
+   REPEAT
+
+   CMD_LINE  = TRIM( CHANGE( CHANGE( CHANGE( CMD_LINE, '  ', @AM ), ' ' : @AM, @AM ), @AM : ' ', @AM ), ' ', 'B' )
+
+RETURN
+
+FETCH.SRC.FILE:
+
+   ! Needs: CMD_LINE
+
+   FILENAME  = CMD_LINE< 1 >
+
+   IF FILENAME EQ '' THEN
+
+      GOSUB OFFER.OUR.ASSISTANCE
+
+   END ELSE
+
+      DEL CMD_LINE< 1 > ;! Drop the filename
+
+      IF FILENAME EQ 'DICT' THEN
+
+         DICTPART  = @TRUE
+         FILENAME  = 'DICT ' : CMD_LINE< 1 >
+
+         IF FILENAME EQ 'DICT ' THEN
+
+            GOSUB OFFER.OUR.ASSISTANCE
+
+         END ELSE
+
+            DEL CMD_LINE< 1 > ;! Drop the filename
+
+         END
+
+      END ELSE
+
+         DICTPART  = @FALSE
+
+         IF INDEX( FILENAME, ',', 1 ) OR FILENAME EQ 'MD' OR FILENAME EQ 'VOC' ELSE
+
+            FILENAME  = FILENAME : ',' : FILENAME
+
+         END
+
+      END
+
+   END
+
+RETURN
+
+MOUNT.SRC.FILE:
+
+   ! Needs: FILENAME
+
+   OPEN FILENAME TO SRC_FILE ELSE
+
+      MSG_TEXT  = 'Could not open `' : FILENAME : '`!'
+
+      GOSUB POPUP.MSG.BOX
+
+   END
+
+RETURN
+
+FETCH.OUT.PATH:
+
+   ! Needs: OUR_ACCT_NAME, CMD_LINE, DICTPART, FILENAME, DISCRETE
+
+   PATH_IDX  = DCOUNT( CMD_LINE[ 1, INDEX( CMD_LINE, ':\', 1 ) ], @AM )
+
+   IF PATH_IDX THEN
+
+      PATHNAME  = CMD_LINE< PATH_IDX > ;! E.g.: C:\Users\username\Documents\folder\...
+
+      DEL CMD_LINE< PATH_IDX > ;! Drop the pathname
+
+      SHOWPATH  = @FALSE
+
+   END ELSE
+
+      GOSUB FETCH.WIN.HOME
+
+      SHOWPATH  = @TRUE
+
+   END
+
+   IF DISCRETE THEN
+
+      IF DICTPART THEN
+
+         PATHNAME  = TRIM( PATHNAME, '\', 'T' ) : '\' : OUR_ACCT_NAME : '\' : FIELD( FILENAME, ' ', 2 ) : '\DICT\'
+
+      END ELSE
+
+         PATHNAME  = TRIM( PATHNAME, '\', 'T' ) : '\' : OUR_ACCT_NAME : '\' : CHANGE( FILENAME, ',', '\' ) : '\'
+
+      END
+
+      CRT EMV_ENCODE( '{027}{002}>MKDIR "' : PATHNAME[ 1, INDEX( PATHNAME, '\', COUNT( PATHNAME, '\' ) ) - 1 ] : '"{013}' ) :
+
+   END ELSE
+
+      IF DICTPART THEN
+
+         PATHNAME  = TRIM( PATHNAME, '\', 'T' ) : '\' : OUR_ACCT_NAME : '~' : FIELD( FILENAME, ' ', 2 ) : ',DICT~'
+
+      END ELSE
+
+         PATHNAME  = TRIM( PATHNAME, '\', 'T' ) : '\' : OUR_ACCT_NAME : '~' : FILENAME : '~'
+
+      END
+
+   END
+
+   PATHNAME := '%ITEMNAME%'
+
+   IF TIMESTMP THEN
+
+      PATHNAME := '_%DATETIME%'
+
+   END
+
+   IF NAME_EXT THEN
+
+      PATHNAME := '.txt'
+
+   END
+
+RETURN
+
+FETCH.WIN.HOME:
+
+   ! Needs: to be called only by FETCH.OUT.PATH
+
+!  VBA_CODE       = 'PInitSession.Output MyDocPath()&vbCr'
+!  VBA_CODE< -1 > = 'End Sub'
+!  VBA_CODE< -1 > = 'Private Declare Function SHGetFolderPath& Lib "shfolder.'
+!  VBA_CODE< -1 > =      'dll" Alias "SHGetFolderPathA" (ByVal hwnd&,ByVal fldr&,B'
+!  VBA_CODE< -1 > =      'yVal tok&,ByVal dw&,ByVal Path$)'
+!  VBA_CODE< -1 > = 'Function MyDocPath() As String'
+!  VBA_CODE< -1 > =    'Dim path As String'
+!  VBA_CODE< -1 > =    'On Error Resume Next'
+!  VBA_CODE< -1 > =    'path=String$(1000,0)'
+!  VBA_CODE< -1 > =    'SHGetFolderPath 0,5,0,0,path'
+!  VBA_CODE< -1 > =    'path=Left$(path,InStr(path,Chr$(0))-1)'
+!  VBA_CODE< -1 > =    'If Len(path) Then'
+!  VBA_CODE< -1 > =       'If Right$(path,1)<>"\" Then'
+!  VBA_CODE< -1 > =         'path=path&"\"'
+!  VBA_CODE< -1 > =       'End If'
+!  VBA_CODE< -1 > =    'End If'
+!  VBA_CODE< -1 > =    'MyDocPath=path'
+!  VBA_CODE< -1 > = 'End Function'
+!  VBA_CODE< -1 > = 'Sub Dummy'
+
+!  CRT @( -10 ) : ESC : STX : 'P ' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+   VBA_CODE  =  'Pdim s as accutermclasses.session'
+   VBA_CODE := '`set s=activesession'
+   VBA_CODE := '`accuterm.activate'
+   VBA_CODE := '`s.output cstr(Environ("USERPROFILE"))&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT PATHNAME :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN
+
+ROUTE.IAW.ITEMNAMES:
+
+   ! IAW = In Accordance With
+
+   ! Needs: CMD_LINE or an active list, DISCRETE
+
+   ! Any remaining CMD_LINE is either a listname or itemname(s), assuming
+   ! there's no active list pending.
+
+   BEGIN CASE
+
+      CASE SYSTEM( 11 )         ;! The active list
+
+         ITEMNAME  = 'SELECTION'
+
+      CASE CMD_LINE< 1 > EQ ''  ;! The whole file
+
+         ITEMNAME  = 'ALL'
+
+         SELECT SRC_FILE
+
+      CASE CMD_LINE< 1 > EQ '*' ;! The whole file
+
+         ITEMNAME  = 'ALL'
+
+         SELECT SRC_FILE
+
+      CASE CMD_LINE< 2 > NE ''  ;! Just these items
+
+         ITEM_MAX  = DCOUNT( CMD_LINE, @AM )
+
+         FOR ITEM_NUM = ITEM_MAX TO 1 STEP -1
+
+            ITEMNAME  = CMD_LINE< ITEM_NUM >
+
+            GOSUB STRIP.OBJ.FILES
+
+            IF ACCEPTED ELSE
+
+               DEL CMD_LINE< ITEM_NUM >
+
+            END
+
+         NEXT ITEM_NUM
+
+         ITEMNAME  = CHANGE( CMD_LINE, @AM, ',' )[ 1, 80 ]
+
+         FORMLIST CMD_LINE
+
+      CASE OTHERWISE            ;! Listname? Itemname?
+
+         ITEMNAME  = CMD_LINE
+
+         EXECUTE 'GET-LIST ' : CMD_LINE CAPTURING ANY_MESSAGES
+
+         IF SYSTEM( 11 ) THEN
+
+            ! Listname!
+
+         END ELSE
+
+            ! Itemname!
+
+            FORMLIST CMD_LINE
+
+         END
+
+   END CASE
+
+   IF DISCRETE THEN
+
+      ITEMNAME  = ''
+
+   END ELSE
+
+      PATHNAME  = CHANGE( PATHNAME, '%ITEMNAME%', ITEMNAME )
+
+   END
+
+RETURN
+
+DLOAD.THE.ITEMS:
+
+   ! Needs: SRC_FILE, SHOWPATH, PATHNAME, DISCRETE, ITEMNAME, CAPTURNG, TRIMMING, TRIM_ALL
+
+   CAPTURNG  = @FALSE
+
+   GOSUB CYCLE.ATW.CAPTURE
+
+   LOOP
+
+      READNEXT ITEMNAME THEN
+
+         GOSUB STRIP.OBJ.FILES
+
+         IF ACCEPTED THEN
+
+            READ THE_ITEM FROM SRC_FILE, ITEMNAME THEN
+
+               IF DISCRETE THEN
+
+                  GOSUB CYCLE.ATW.CAPTURE
+                  GOSUB DLOAD.THE.ITEM
+                  GOSUB CYCLE.ATW.CAPTURE
+
+               END ELSE
+
+                  GOSUB DLOAD.THE.ITEM
+
+               END
+
+            END
+
+         END
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   CRT LF : LF :
+
+   GOSUB CYCLE.ATW.CAPTURE
+
+   IF SHOWPATH THEN
+
+      MSG_TEXT  = 'See: `' : PATHNAME : '`'
+
+      GOSUB POPUP.MSG.BOX
+
+   END
+
+RETURN
+
+CYCLE.ATW.CAPTURE:
+
+   ! Needs: ITEMNAME, CAPTURNG, PATHNAME
+
+   IF LEN( ITEMNAME ) AND NOT( CAPTURNG ) THEN
+
+      IF ECHO_STATE THEN
+
+         ECHO ON
+
+      END
+
+      IF TIMESTMP THEN
+
+         DATETIME  = CHANGE( OCONV( DATE(), 'D4/' ), '/', '' ) : CHANGE( OCONV( TIME(), 'MTS' ), ':', '' ) 'R%6'
+         DATETIME  = DATETIME[ 5, 4 ] : DATETIME[ 1, 4 ] : DATETIME[ 9, 6 ]
+
+      END ELSE
+
+         DATETIME  = ''
+
+      END
+
+      CRT EMV_ENCODE( '{027}{002}CO;' : CHANGE( CHANGE( PATHNAME, '%DATETIME%', DATETIME ), '%ITEMNAME%', ITEMNAME ) : '{013}' ) :
+
+      CAPTURNG  = @TRUE
+
+   END ELSE
+
+      CRT EMV_ENCODE( '{027}{002}CX{013}' ) :
+
+      CAPTURNG  = @FALSE
+
+   END
+
+RETURN
+
+STRIP.OBJ.FILES:
+
+   ! Needs: ITEMNAME
+
+   ACCEPTED  = ITEMNAME[ 1, 1 ] NE '$'
+   ACCEPTED  = ITEMNAME[   3  ] NE '.so'    AND ACCEPTED
+   ACCEPTED  = ITEMNAME[   6  ] NE '.so.el' AND ACCEPTED
+
+RETURN
+
+DLOAD.THE.ITEM:
+
+   ! Needs: TRIMMING, TRIM_ALL, DISCRETE, THE_ITEM
+
+   IF STRIPCRS THEN OLD_CHAR = CR      ; GOSUB STRIP.THE.CHARS
+   IF STRIPLFS THEN OLD_CHAR =      LF ; GOSUB STRIP.THE.CHARS
+   IF STRIPNLS THEN OLD_CHAR = CR : LF ; GOSUB STRIP.THE.CHARS
+
+   IF TRIMMING OR TRIM_ALL THEN
+
+      ! Trim trailing value-marks and spaces for faster pasting.
+
+      LOOP
+
+         ITEM_LEN  = LEN( THE_ITEM )
+
+         THE_ITEM  = TRIM( THE_ITEM, ' ', 'T' )
+         THE_ITEM  = TRIM( THE_ITEM, @AM, 'T' )
+         THE_ITEM  = TRIM( THE_ITEM, @VM, 'T' )
+         THE_ITEM  = TRIM( THE_ITEM, @SM, 'T' )
+
+      UNTIL LEN( THE_ITEM ) EQ ITEM_LEN DO REPEAT
+
+   END
+
+   IF TRIM_ALL THEN
+
+      ! Trim each line's trailing spaces, etc.
+
+      LOOP
+
+         ITEM_LEN  = LEN( THE_ITEM )
+
+         THE_ITEM  = CHANGE( THE_ITEM, ' ' : @AM, @AM )
+         THE_ITEM  = CHANGE( THE_ITEM, @VM : @AM, @AM )
+         THE_ITEM  = CHANGE( THE_ITEM, @SM : @AM, @AM )
+
+      UNTIL LEN( THE_ITEM ) EQ ITEM_LEN DO REPEAT
+
+   END
+
+   IF ULOADABL THEN
+
+      LINE_MAX  = DCOUNT( THE_ITEM, @AM )
+
+      THE_ITEM  = 'I' : @AM : THE_ITEM
+      THE_ITEM  = 'ED '     : FILENAME : ' ' : ITEMNAME : @AM : THE_ITEM
+      THE_ITEM  = 'DELETE ' : FILENAME : ' ' : ITEMNAME : @AM : THE_ITEM
+
+      IF INDEX( THE_ITEM, @AM : @AM, 1 ) THEN
+
+         ! We have to add something to empty lines so they can be uploaded
+         ! without exiting the editor's insert-mode.
+
+         IF JUSTSPCS THEN
+
+            PLACHLDR  = ' '
+
+         END ELSE
+
+            ! Find a single, 'safe' char that isn't already in the item.
+
+            FOR PLACHLDR = 32 TO 126 WHILE INDEX( THE_ITEM, CHAR( PLACHLDR ), 1 ) ; NEXT PLACHLDR
+
+            IF PLACHLDR LT 127 THEN
+
+               PLACHLDR  = CHAR( PLACHLDR )
+
+            END ELSE
+
+               ! We couldn't find a safe, unused char in this item to  use
+               ! as a placeholder for null lines, so we'll have to  resort
+               ! back to a longer, more unwieldy, placeholder.
+
+               PLACHLDR  = '!' : '~' : '`' ;! Split to hide from itself
+
+            END
+
+         END
+
+         THE_ITEM  = CHANGE( THE_ITEM, @AM : @AM, @AM : PLACHLDR : @AM )
+         THE_ITEM  = CHANGE( THE_ITEM, @AM : @AM, @AM : PLACHLDR : @AM )
+
+         IF THE_ITEM[ 1 ] EQ @AM ELSE
+
+            THE_ITEM := @AM
+
+         END
+
+         IF PLACHLDR NE ' ' THEN
+
+            THE_ITEM := @AM : 'T' : @AM : 'R' : LINE_MAX : '|' : PLACHLDR : '||'
+
+         END
+
+      END
+
+      ! When pasting via AccuTerm, chars 127-250 freeze the session, so we
+      ! need  to  neutralize  them.    We  should  probably  also  add  an
+      ! 'AccuTerm' flag, too, as well as  another  program  that  converts
+      ! them back again.
+
+      FOR CHAR_NUM = 0 TO 31
+
+         GOSUB NEUTRALIZE.CTL.CHRS
+
+      NEXT CHAR_NUM
+
+      FOR CHAR_NUM = 127 TO 250
+
+         GOSUB NEUTRALIZE.CTL.CHRS
+
+      NEXT CHAR_NUM
+
+      IF THE_ITEM[ 1 ] EQ @AM ELSE
+
+         THE_ITEM := @AM
+
+      END
+
+      IF THE_ITEM< DCOUNT( THE_ITEM, @AM ) - 2 > EQ 'T' ELSE
+
+         THE_ITEM := @AM
+
+      END
+
+      THE_ITEM := 'FI' : @AM
+
+      IF DISCRETE THEN
+
+         THE_ITEM := @AM
+
+      END
+
+   END
+
+   CRT CHANGE( THE_ITEM, @AM, LF ) :
+
+RETURN
+
+STRIP.THE.CHARS:
+
+   LOOP
+
+      ITEM_LEN  = LEN( THE_ITEM )
+
+      THE_ITEM  = CHANGE( THE_ITEM,       OLD_CHAR : @AM, @AM )
+      THE_ITEM  = CHANGE( THE_ITEM, @AM : OLD_CHAR      , @AM )
+      THE_ITEM  = CHANGE( THE_ITEM,       OLD_CHAR      , @AM )
+
+   UNTIL LEN( THE_ITEM ) EQ ITEM_LEN DO REPEAT
+
+RETURN
+
+NEUTRALIZE.CTL.CHRS:
+
+   ! Append ED commands to the output file to  globally  replace  any/all
+   ! decoded control-characters with the actual control-characters  after
+   ! upload.
+
+   IF INDEX( THE_ITEM, CHAR( CHAR_NUM ), 1 ) THEN
+
+      IF THE_ITEM[ 1 ] EQ @AM ELSE
+
+         THE_ITEM := @AM
+
+      END
+
+      ! Beg Pick AP =================== Generic Pick ====================
+      ! End Pick AP =================== Generic Pick ====================
+      ! Beg Pick D3 =============== Rocket Software's D3 ================
+      ! End Pick D3 =============== Rocket Software's D3 ================
+      ! Beg Pick IC ================ InsterSytems' Cache ================
+      ! End Pick IC ================ InsterSytems' Cache ================
+      ! Beg Pick JB ================== Zumasys' jBase ===================
+
+!     SWAP_ALL  = 'T' : @AM : 'RU' : LINE_MAX : '|{' : CHAR_NUM 'R%3}|' : CHAR( CHAR_NUM ) : '|'
+
+      ! End Pick JB ================== Zumasys' jBase ===================
+      ! Beg Pick NR ================ Northgate's Reality ================
+      ! End Pick NR ================ Northgate's Reality ================
+      ! Beg Pick ON ======= Onware Software Corporations's Onware =======
+      ! End Pick ON ======= Onware Software Corporations's Onware =======
+      ! Beg Pick QM ================ Ladybridge's OpenQM ================
+
+!     SWAP_ALL  = 'T' : @AM : 'RG' : LINE_MAX : '|{' : CHAR_NUM 'R%3}|^' : CHAR_NUM 'R%3|'
+
+      ! End Pick QM ================ Ladybridge's OpenQM ================
+      ! Beg Pick UD ============= Rocket Software's UniData =============
+
+!     SWAP_ALL  = 'T' : @AM : 'C|{' : CHAR_NUM 'R%3}|^' : CHAR_NUM '%R3|G' : LINE_MAX
+
+      ! End Pick UD ============= Rocket Software's UniData =============
+      ! Beg Pick UV ============ Rocket Software's UniVerse =============
+
+      SWAP_ALL  = 'T' : @AM : 'C|{' : CHAR_NUM 'R%3}|^' : CHAR_NUM '%R3|G' : LINE_MAX
+
+      ! End Pick UV ============ Rocket Software's UniVerse =============
+      ! Beg Pick VU =============== ViaSystems' UniVision ===============
+      ! End Pick VU =============== ViaSystems' UniVision ===============
+
+      THE_ITEM  = CHANGE( THE_ITEM, CHAR( CHAR_NUM ), '{' : CHAR_NUM 'R%3}' ) : SWAP_ALL
+
+   END
+
+RETURN
+
+OFFER.OUR.ASSISTANCE:
+
+   MSG_TEXT  = 'Downloads any/all items from the specified Pick database'
+   MSG_TEXT := ' to a single file, or to individual files on your PC`s h'
+   MSG_TEXT := 'ard-drive, in a location of your choice (defaulting to y'
+   MSG_TEXT := 'our home [C:\Users\yourid\Documents] directory), optiona'
+   MSG_TEXT := 'lly trimming any trailing space from the end of each ite'
+   MSG_TEXT := 'm and/or from the end of each line in each item, strippi'
+   MSG_TEXT := 'ng any carriage-returns, and even appending a time-stamp'
+   MSG_TEXT := ' to each downloaded file.  And all that via AccuTerm`s s'
+   MSG_TEXT := 'creen-capture (i.e: with NO help from any of their host '
+   MSG_TEXT := 'programs).||Useful for backing up your work, for moving '
+   MSG_TEXT := 'data between systems, or for editing off-line.||Also wor'
+   MSG_TEXT := 'ks with an active list of selections.||Required paramete'
+   MSG_TEXT := 'rs: Database name||Optional parameters: List-id or Item-'
+   MSG_TEXT := 'id(s), download Path||Options: (ADEJLNRSTU||A-ll-trim re'
+   MSG_TEXT := 'moves spaces from the end of every line|D-iscrete downlo'
+   MSG_TEXT := 'ads/output-files for each item, which also creates sub-d'
+   MSG_TEXT := 'irectories in the download path reflecting the account, '
+   MSG_TEXT := 'filename, and data partition name.|J-ust pad blank lines'
+   MSG_TEXT := ' with spaces instead of the fancier, default !~`|L-remov'
+   MSG_TEXT := 'es Line-Feeds from every line|N-removes New-Lines (CR:LF'
+   MSG_TEXT := ') from every line|R-emove any Carriage-Returns|S-paces g'
+   MSG_TEXT := 'et stripped from the end of each item|T-imestamp each do'
+   MSG_TEXT := 'wnload file|U-ploadable makes each downloaded file easie'
+   MSG_TEXT := 'r to upload again via copy-n-paste by prepending and app'
+   MSG_TEXT := 'ending TCL/ED commands to automatically create each item'
+   MSG_TEXT := ' being uploaded.||Syntax:||EMV_DLD_CAP_ATW Dbase[ Path]['
+   MSG_TEXT := ' List-id|Item-id[ Item-id[ Item-id[...]]]][ ([A][D][J][R'
+   MSG_TEXT := '][S][T]]||Examples:||DLD_CAP_ATW BP (AS|EMV_DLD_CAP_ATW '
+   MSG_TEXT := 'DICT CUSTOMERS * C:\Users\myfiles\Documents (T|EMV_DLD_C'
+   MSG_TEXT := 'AP_ATW ORDERS C:\Users\myfiles\Documents (T|GET-LIST MYL'
+   MSG_TEXT := 'IST|EMV_DLD_CAP_ATW VENDORS C:\Users\myfiles\Documents||'
+   MSG_TEXT := 'Output files can be most easily uploaded again via AccuT'
+   MSG_TEXT := 'erm`s `Paste From...` feature (on the Edit menu), or via'
+   MSG_TEXT := ' `copy-n-paste` in almost any other emulator, such as Pu'
+   MSG_TEXT := 'TTY.'
+
+   GOSUB POPUP.MSG.BOX
+
+RETURN
+
+POPUP.MSG.BOX:
+
+   ! Needs: MSG_TEXT
+
+   MSG_TEXT  = CHANGE( MSG_TEXT, '|', '"&vbCrLf&"' ) ;! Line-breaks
+
+   VBA_CODE  = '{027}{002}Pdim s as accutermclasses.session'
+   VBA_CODE := '{025}set s = activesession'
+   VBA_CODE := '{025}MsgBox "' : MSG_TEXT : '"{013}'
+
+   CRT EMV_ENCODE( VBA_CODE ) :
+
+   SUCCESSFUL = @FALSE
+
+RETURN

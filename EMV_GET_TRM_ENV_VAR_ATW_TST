@@ -1,0 +1,60 @@
+PROGRAM EMV_GET_TRM_ENV_VAR_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:50 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_GET_TRM_ENV_VAR_ATW
+
+! Old name: N/A
+
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ALLUSERSPROFILE'         ) ; CRT 'ALLUSERSPROFILE         = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'APPDATA'                 ) ; CRT 'APPDATA                 = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'CommonProgramFiles'      ) ; CRT 'CommonProgramFiles      = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'CommonProgramFiles(x86)' ) ; CRT 'CommonProgramFiles(x86) = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'CommonProgramW6432'      ) ; CRT 'CommonProgramW6432      = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'COMPUTERNAME'            ) ; CRT 'COMPUTERNAME            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ComSpec'                 ) ; CRT 'ComSpec                 = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'DEFLOGDIR'               ) ; CRT 'DEFLOGDIR               = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'FP_NO_HOST_CHECK'        ) ; CRT 'FP_NO_HOST_CHECK        = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'HOMEDRIVE'               ) ; CRT 'HOMEDRIVE               = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'HOMEPATH'                ) ; CRT 'HOMEPATH                = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'LOCALAPPDATA'            ) ; CRT 'LOCALAPPDATA            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'LOGONSERVER'             ) ; CRT 'LOGONSERVER             = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'NUMBER_OF_PROCESSORS'    ) ; CRT 'NUMBER_OF_PROCESSORS    = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'OS'                      ) ; CRT 'OS                      = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'Path'                    ) ; CRT 'Path                    = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PATHEXT'                 ) ; CRT 'PATHEXT                 = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PROCESSOR_ARCHITECTURE'  ) ; CRT 'PROCESSOR_ARCHITECTURE  = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PROCESSOR_IDENTIFIER'    ) ; CRT 'PROCESSOR_IDENTIFIER    = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PROCESSOR_LEVEL'         ) ; CRT 'PROCESSOR_LEVEL         = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PROCESSOR_REVISION'      ) ; CRT 'PROCESSOR_REVISION      = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ProgramData'             ) ; CRT 'ProgramData             = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ProgramFiles'            ) ; CRT 'ProgramFiles            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ProgramFiles(x86)'       ) ; CRT 'ProgramFiles(x86)       = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'ProgramW6432'            ) ; CRT 'ProgramW6432            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PROMPT'                  ) ; CRT 'PROMPT                  = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PSModulePath'            ) ; CRT 'PSModulePath            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'PUBLIC'                  ) ; CRT 'PUBLIC                  = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'SESSIONNAME'             ) ; CRT 'SESSIONNAME             = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'SystemDrive'             ) ; CRT 'SystemDrive             = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'SystemRoot'              ) ; CRT 'SystemRoot              = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'TEMP'                    ) ; CRT 'TEMP                    = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'TMP'                     ) ; CRT 'TMP                     = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'UATDATA'                 ) ; CRT 'UATDATA                 = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'USERDNSDOMAIN'           ) ; CRT 'USERDNSDOMAIN           = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'USERDOMAIN'              ) ; CRT 'USERDOMAIN              = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'USERNAME'                ) ; CRT 'USERNAME                = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'USERPROFILE'             ) ; CRT 'USERPROFILE             = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'VSEDEFLOGDIR'            ) ; CRT 'VSEDEFLOGDIR            = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'windir'                  ) ; CRT 'windir                  = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'windows_tracing_flags'   ) ; CRT 'windows_tracing_flags   = ' : VAR_VALU
+   CALL EMV_GET_TRM_ENV_VAR_ATW( VAR_VALU, 'windows_tracing_logfile' ) ; CRT 'windows_tracing_logfile = ' : VAR_VALU
+
+STOP

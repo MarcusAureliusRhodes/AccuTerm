@@ -1,0 +1,49 @@
+SUBROUTINE EMV_ISSUE_VIA_ATW( WIN_COMMANDS )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 05/24/2017 18:34:00 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Executes Windows commands on  the  remote  (terminal)  system,
+!           optionally waiting for them to complete before continuing.
+
+! '>' : win_commands = wait
+! '<' : win_commands = don't wait
+
+   EQU IDENTITY TO 'EMV_ISSUE_VIA_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   NUM_COMMANDS = DCOUNT( WIN_COMMANDS, @AM )
+
+   CRT STSROW_1 :
+
+   FOR COMMAND_NUM = 1 TO NUM_COMMANDS
+
+      CRT @( TERM_WIDTH - 1 ) : ESC : STX : WIN_COMMANDS< COMMAND_NUM > : CR :
+
+!     SLEEP 1
+
+!     CALL EMV_SLINE_MSG_CONTINUE( OCONV( 'SLINE_MSG_CONTINUE_' : SYSTEM( 22 ), 'TCONTROLS;X;;1' ) )
+
+!     if oconv( oconv( 'u', 'U50BB' ), 'MCU' ) eq 'marcus' then
+
+!        call sline_msg_wait( win_commands< command_num > )
+
+!     end else
+
+         call EMV_SLINE_MSG_CONTINUE( '' )
+
+!     end
+
+   NEXT COMMAND_NUM
+
+   CRT STSROW_0 :
+
+RETURN ;! to the calling program.

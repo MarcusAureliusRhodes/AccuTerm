@@ -1,0 +1,81 @@
+PROGRAM EMV_MLT_LST_BOX_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 02/28/2019 13:38:51 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_MLT_LST_BOX_ATW.
+
+   EQU IDENTITY TO 'EMV_MLT_LST_BOX_ATW_TST'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF ;! Let's keep these elemental.
+
+   EQU LF TO CHAR( 10 )
+   EQU CR TO CHAR( 13 )
+
+   PROMPT ''
+
+!  FILENAME  = 'EMV,DEV'
+   FILENAME  = 'MR.BP'
+   DLOG_HDR  = FILENAME
+   LIST_TTL  = 'Ctrl+Click any/all that apply:'
+   FULL_LST  = ''
+   VIEW_LST  = ''
+   TYPE_LST  = ''
+
+   OPEN FILENAME TO THE_ITEMS THEN
+
+      SELECT THE_ITEMS
+
+      LOOP
+
+         READNEXT ITEMNAME THEN
+
+            VIEW_TXT  = TRIM( OCONV( ITEMNAME, 'T' : FILENAME : ';X;;1' ) )
+            VIEW_TYP  = FIELD( VIEW_TXT, ' ', 1 )
+
+            ACCEPTED  = VIEW_TYP EQ 'PROGRAM'
+            ACCEPTED += VIEW_TYP EQ 'SUBROUTINE'
+            ACCEPTED += VIEW_TYP EQ 'FUNCTION'
+
+            IF ACCEPTED THEN
+
+               VIEW_TYP  = FIELD( VIEW_TXT, ' ', 1 )[ 1, 3 ]
+               VIEW_TXT  = FIELD( VIEW_TXT, ' ', 2 )
+               VIEW_TXT  = FIELD( VIEW_TXT, '(', 1 )
+
+               LOCATE VIEW_TXT IN VIEW_LST BY 'AL' SETTING NEW_ATTR ELSE
+
+                  NAME_LST  = INSERT( NAME_LST, NEW_ATTR; ITEMNAME )
+                  VIEW_LST  = INSERT( VIEW_LST, NEW_ATTR; VIEW_TXT )
+                  TYPE_LST  = INSERT( TYPE_LST, NEW_ATTR; VIEW_TYP )
+
+               END
+
+            END
+
+         END ELSE
+
+            EXIT
+
+         END
+
+      REPEAT
+
+      PART_LST       = NAME_LST< 2 >
+      PART_LST< -1 > = NAME_LST< 4 >
+      PART_LST< -1 > = NAME_LST< 6 >
+
+      CALL EMV_MLT_LST_BOX_ATW( PART_LST, NAME_LST, VIEW_LST, LIST_HDR, DLOG_HDR )
+
+      CALL EMV_ALERT_BOX_ATW( 'You selected...' : @AM : PART_LST )
+
+   END
+
+STOP

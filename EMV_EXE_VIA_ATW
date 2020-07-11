@@ -1,0 +1,66 @@
+PROGRAM EMV_EXE_VIA_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 11/20/2018 08:49:20 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Empowers primarily procs and paragraphs with the  ability  to
+!           execute Windows commands on  the  remote  (terminal)  system,
+!           optionally continuing without waiting for them to complete.
+
+! Syntax  : EMV_EXE_VIA_ATW "c:\path\prg.exe" "d:\path\file.ext"
+!           EMV_EXE_VIA_ATW "c:\path\prg.exe" "\\server\path\file.ext" (C
+
+!           The default operation is to pause while the terminal executes
+!           a local program.  If, instead, you wish the host  program  to
+!           continue running without waiting for the  terminal's  program
+!           to exit, use the C option.
+
+! Examples: EMV_EXE_VIA_ATW "c:\Program Files (x86)\Microsoft Office\O...
+!           ffice12\EXCEL.EXE" "E:\Desktop\Stuff\Work\Clients\CMI\DLI\...
+!           SC\ProductRpt.xlsx" (C
+
+! Upcoming:
+
+! Old name: EMV_EXE_VIA_ATW
+
+   EQU IDENTITY TO 'EMV_EXE_VIA_ATW'
+
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   CALL EMV_GET_CMD_LINE( RUN_MODE, FILENAME, PRG_NAME, CMD_LINE, EXE_MODE )
+
+   ! '>' : win_command ... wait
+   ! '<' : win_command ... don't wait
+
+   EXE_MODE  = '><'[ ( EXE_MODE EQ 'C' ) + 1, 1 ] ;! Limit the choices
+
+   LINE_MAX  = DCOUNT( CMD_LINE, @AM )
+
+   FOR LINE_IDX = 1 TO LINE_MAX
+
+      THE_LINE  = CMD_LINE< LINE_IDX >
+
+      IF INDEX( THE_LINE, ' ', 1 ) OR INDEX( ' ', THE_LINE, 1 ) THEN
+
+         CMD_LINE< LINE_IDX >  = '"' : THE_LINE : '"'
+
+      END
+
+   NEXT LINE_IDX
+
+   CMD_LINE  = CHANGE( CMD_LINE, @AM, ' ' )
+
+   CALL EMV_CURSOR_CAPTURE
+
+   CRT @( 0, 0 ) : ESC : STX : EXE_MODE : CMD_LINE
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN ;! to the calling program.

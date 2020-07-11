@@ -1,0 +1,49 @@
+SUBROUTINE EMV_VER_PTH_ATW( FULL_PATHNAME, SUCCESSFUL )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 05/24/2017 18:33:32 by Marcus
+
+! Platform:
+
+! verifies the existence of full_pathname (which must include the entire path and file-name) (e.g.: c:\windows\program.exe).
+
+   EQU IDENTITY TO 'EMV_VER_PTH_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF SUCCESSFUL THEN
+
+      ECHO OFF
+
+      VBA_CODE       = 'Dim s as AccuTermClasses.session'
+      VBA_CODE< -1 > = 'set s = activesession'
+      VBA_CODE< -1 > = 's.output fileexists("' : FULL_PATHNAME : '")&VbCr'
+
+      CRT STSROW_1 : ESC : STX : 'P ' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+      INPUT SUCCESSFUL ;! the script enters this
+
+      IF ECHO_STATE THEN
+
+         ECHO ON
+
+      END
+
+      ! restore previous message line.
+
+!     CALL EMV_SLINE_MSG_CONTINUE( OCONV( 'SLINE_MSG_CONTINUE_' : SYSTEM( 22 ), 'TCONTROLS;X;;1' ) )
+
+      CALL EMV_SLINE_MSG_CONTINUE( '' )
+
+      CRT STSROW_0 :
+
+      SUCCESSFUL = SUCCESSFUL EQ 'true'
+
+   END
+
+RETURN ;! to the calling program

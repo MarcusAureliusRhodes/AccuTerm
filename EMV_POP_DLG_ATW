@@ -1,0 +1,148 @@
+! Beg Pick AP ======================= Generic Pick =======================
+
+SUBROUTINE EMV_POP_DLG_ATW( OUT_COME, VBA_CODE )
+
+! End Pick AP ======================= Generic Pick =======================
+! Beg Pick D3 =================== Rocket Software's D3 ===================
+
+SUBROUTINE EMV_POP_DLG_ATW( OUT_COME, VBA_CODE )
+
+! End Pick D3 =================== Rocket Software's D3 ===================
+! Beg Pick IC =================== InsterSytems' Cache ====================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick IC =================== InsterSytems' Cache ====================
+! Beg Pick JB ====================== Zumasys' jBase ======================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick JB ====================== Zumasys' jBase ======================
+! Beg Pick NR =================== Northgate's Reality ====================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick NR =================== Northgate's Reality ====================
+! Beg Pick ON ========== Onware Software Corporations's Onware ===========
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick ON ========== Onware Software Corporations's Onware ===========
+! Beg Pick QM =================== Ladybridge's OpenQM ====================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick QM =================== Ladybridge's OpenQM ====================
+! Beg Pick UD ================ Rocket Software's UniData =================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick UD ================ Rocket Software's UniData =================
+! Beg Pick UV ================ Rocket Software's UniVerse ================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick UV ================ Rocket Software's UniVerse ================
+! Beg Pick VU ================== ViaSystems' UniVision ===================
+
+FUNCTION EMV_POP_DLG_ATW( VBA_CODE )
+
+! End Pick VU ================== ViaSystems' UniVision ===================
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:22 by Marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function: Presents an AccuTerm user VBA_CODE, returning the_results
+
+! Var_Name IO Typ Description____________________________________________
+
+! VBA_CODE should be designed to delimit multiple responses with |.
+
+   EQU IDENTITY TO 'EMV_POP_DLG_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   OUT_COME = ''
+
+   IF ASSIGNED( VBA_CODE ) THEN
+
+      IF LEN( VBA_CODE ) THEN
+
+!        CRT ESC : STX : 'P appminimize appgetactive()'
+!        CRT ESC : STX : 'P ' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+         CRT ESC : STX : 'P' : VBA_CODE : CR :
+!        CRT ESC : STX : 'P apprestore appgetactive()'
+
+         ECHO OFF
+
+         INPUT OUT_COME :
+
+         IF ECHO_STATE THEN
+
+            ECHO ON
+
+         END
+
+         CONVERT '|' TO @AM IN OUT_COME
+
+      END
+
+   END
+
+! Beg Pick AP ======================= Generic Pick =======================
+
+RETURN ;! to the calling program
+
+! End Pick AP ======================= Generic Pick =======================
+! Beg Pick D3 =================== Rocket Software's D3 ===================
+
+RETURN ;! to the calling program
+
+! End Pick D3 =================== Rocket Software's D3 ===================
+! Beg Pick IC =================== InsterSytems' Cache ====================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick IC =================== InsterSytems' Cache ====================
+! Beg Pick JB ====================== Zumasys' jBase ======================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick JB ====================== Zumasys' jBase ======================
+! Beg Pick NR =================== Northgate's Reality ====================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick NR =================== Northgate's Reality ====================
+! Beg Pick ON ========== Onware Software Corporations's Onware ===========
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick ON ========== Onware Software Corporations's Onware ===========
+! Beg Pick QM =================== Ladybridge's OpenQM ====================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick QM =================== Ladybridge's OpenQM ====================
+! Beg Pick UD ================ Rocket Software's UniData =================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick UD ================ Rocket Software's UniData =================
+! Beg Pick UV ================ Rocket Software's UniVerse ================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick UV ================ Rocket Software's UniVerse ================
+! Beg Pick VU ================== ViaSystems' UniVision ===================
+
+RETURN( OUT_COME ) ;! to the calling program
+
+! End Pick VU ================== ViaSystems' UniVision ===================

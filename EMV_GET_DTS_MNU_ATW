@@ -1,0 +1,248 @@
+SUBROUTINE EMV_GET_DTS_MNU_ATW( DATE_BEG, DATE_END, THE_TITLE, SUCCESSFUL )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/18/2014 22:28:53 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm 2K2; Any emulation
+
+! Function: Offers a menu of typical date  ranges  (i.e.  current/previous
+!           day, week, month, quarter, and year) to select from,  as  well
+!           as the option to specify any other date range
+
+   EQU IDENTITY TO 'EMV_GET_DTS_MNU_ATW'
+   EQU STX      TO CHAR(  2 )
+   EQU CR       TO CHAR( 13 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   IF ASSIGNED( SUCCESSFUL ) ELSE
+
+      SUCCESSFUL  = @TRUE
+
+   END
+
+   PROMPT ''
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   EQU BUTTON_W TO 150
+   EQU BUTTON_H TO  22
+   EQU BORDER_L TO  20
+   EQU BORDER_T TO  10
+
+   DIALOG_W = BUTTON_W *  2 + 3 * BORDER_L
+   DIALOG_H = BUTTON_H * 11 + 4 * BORDER_T
+
+   GOSUB BUILD.THE.DIALOG
+
+   BEGIN CASE
+
+      CASE THE_BTTN EQ  0 ; GOSUB BAIL.OUT
+      CASE THE_BTTN EQ  1 ; GOSUB SOMETHING.ELSE
+      CASE THE_BTTN EQ  2 ; GOSUB PREV.DAY
+      CASE THE_BTTN EQ  3 ; GOSUB CURR.DAY
+      CASE THE_BTTN EQ  4 ; GOSUB PREV.WEEK
+      CASE THE_BTTN EQ  5 ; GOSUB CURR.WEEK
+      CASE THE_BTTN EQ  6 ; GOSUB PREV.MONTH
+      CASE THE_BTTN EQ  7 ; GOSUB CURR.MONTH
+      CASE THE_BTTN EQ  8 ; GOSUB PREV.QUARTER
+      CASE THE_BTTN EQ  9 ; GOSUB CURR.QUARTER
+      CASE THE_BTTN EQ 10 ; GOSUB PREV.YEAR
+      CASE THE_BTTN EQ 11 ; GOSUB CURR.YEAR
+
+   END CASE
+
+RETURN ;! to the calling program.
+
+BUILD.THE.DIALOG:
+
+   BUTTON_M = BORDER_L + BUTTON_W + BORDER_L
+
+   VBA_CODE       = 'Dim S As Session'
+   VBA_CODE< -1 > = 'Set S=ActiveSession'
+   VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : DIALOG_W : ',' : DIALOG_H : ',"' : THE_TITLE : '"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  8.0 ) : ',' : ( BUTTON_W * 2 +   BORDER_L ) : ',' : BUTTON_H : ',"Other date &range"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  0.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Yester&day"'
+   VBA_CODE< -1 > =    'PushButton '   : BUTTON_M : ',' : INT( BUTTON_H *  0.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"&Today"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  2.0 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Previous &week"'
+   VBA_CODE< -1 > =    'PushButton '   : BUTTON_M : ',' : INT( BUTTON_H *  2.0 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Current w&eek"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  3.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Previous &month"'
+   VBA_CODE< -1 > =    'PushButton '   : BUTTON_M : ',' : INT( BUTTON_H *  3.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Current m&onth"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  5.0 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Previous &quarter"'
+   VBA_CODE< -1 > =    'PushButton '   : BUTTON_M : ',' : INT( BUTTON_H *  5.0 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Current q&uarter"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  6.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Previous &year"'
+   VBA_CODE< -1 > =    'PushButton '   : BUTTON_M : ',' : INT( BUTTON_H *  6.5 ) : ',' :   BUTTON_W : ',' : BUTTON_H : ',"Current ye&ar"'
+   VBA_CODE< -1 > =    'PushButton '   : BORDER_L : ',' : INT( BUTTON_H *  9.5 ) : ',' : ( BUTTON_W * 2 +   BORDER_L ) : ',' : BUTTON_H : ',"&Back"'
+   VBA_CODE< -1 > =    'CancelButton ' : BORDER_L : ',' : INT( BUTTON_H * 11.0 ) : ',' : ( BUTTON_W * 2 +   BORDER_L ) : ',' : BUTTON_H
+   VBA_CODE< -1 > = 'End Dialog'
+   VBA_CODE< -1 > = 'Dim dlg As UserDialog'
+   VBA_CODE< -1 > = 'S.Output CStr(Dialog(dlg,1))&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT THE_BTTN :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN
+
+BAIL.OUT:
+
+   SUCCESSFUL = @FALSE
+
+RETURN
+
+SOMETHING.ELSE:
+
+   CALL EMV_GET_DT_ATW( DATE_BEG, 'Choose report start date' )
+
+   IF DATE_BEG THEN
+
+      CALL EMV_GET_DT_ATW( DATE_END, 'Choose report end date' )
+
+   END
+
+   CONTINUING = DATE_BEG AND DATE_END
+
+RETURN
+
+PREV.DAY:
+
+   DATE_BEG = DATE() - 1
+   DATE_END = DATE() - 1
+
+RETURN
+
+CURR.DAY:
+
+   DATE_BEG = DATE()
+   DATE_END = DATE()
+
+RETURN
+
+PREV.WEEK:
+
+   DATE_END = DATE() -   OCONV( DATE(), 'DW' ) - 1
+   DATE_BEG = DATE_END - 6
+
+RETURN
+
+CURR.WEEK:
+
+   DATE_BEG = DATE() -   OCONV( DATE(), 'DW' )
+   DATE_END = DATE_BEG + 6
+
+RETURN
+
+PREV.MONTH:
+
+   THE_YEAR = OCONV( DATE(), 'DY' )
+   CUR_MNTH = OCONV( DATE(), 'DM' )
+   PRV_MNTH = CUR_MNTH - 1
+
+   IF PRV_MNTH LT 1 THEN
+
+      PRV_MNTH  = 12
+      THE_YEAR -=  1
+
+   END
+
+   DATE_BEG = ICONV( PRV_MNTH : '/01/' : THE_YEAR, 'D' )
+   DATE_END = ICONV( CUR_MNTH : '/01/' : THE_YEAR, 'D' ) - 1
+
+RETURN
+
+CURR.MONTH:
+
+   THE_YEAR = OCONV( DATE(), 'DY' )
+   CUR_MNTH = OCONV( DATE(), 'DM' )
+   NXT_MNTH = CUR_MNTH + 1
+
+   IF NXT_MNTH GT 12 THEN
+
+      NXT_MNTH  = 1
+      THE_YEAR += 1
+
+   END
+
+   DATE_BEG = ICONV( CUR_MNTH : '/01/' : THE_YEAR, 'D' )
+   DATE_END = ICONV( NXT_MNTH : '/01/' : THE_YEAR, 'D' ) - 1
+
+RETURN
+
+PREV.QUARTER:
+
+   DATE_END = DATE()
+   QRTR_NUM = INT( OCONV( DATE_END, 'DM' ) / 3 + 0.7 )
+
+   LOOP
+
+      DATE_END -= 1
+
+   WHILE INT( OCONV( DATE_END, 'DM' ) / 3 + 0.7 ) EQ QRTR_NUM DO REPEAT
+
+   QRTR_NUM = INT( OCONV( DATE_END, 'DM' ) / 3 + 0.7 )
+   DATE_BEG = DATE_END - 89
+
+   LOOP WHILE INT( OCONV( DATE_BEG, 'DM' ) / 3 + 0.7 ) EQ QRTR_NUM DO
+
+      DATE_BEG -= 1
+
+   REPEAT
+
+   DATE_BEG += 1
+
+RETURN
+
+CURR.QUARTER:
+
+   DATE_BEG = DATE()
+   QRTR_NUM = INT( OCONV( DATE_BEG, 'DM' ) / 3 + 0.7 )
+
+   LOOP
+
+      DATE_BEG -= 1
+
+   WHILE INT( OCONV( DATE_BEG, 'DM' ) / 3 + 0.7 ) EQ QRTR_NUM DO REPEAT
+
+   DATE_BEG += 1
+   DATE_END  = DATE_BEG + 89
+
+   LOOP
+
+      DATE_END += 1
+
+   WHILE INT( OCONV( DATE_END, 'DM' ) / 3 + 0.7 ) EQ QRTR_NUM DO REPEAT
+
+   DATE_END -= 1
+
+RETURN
+
+PREV.YEAR:
+
+   DATE_BEG = '01/01/' : ( OCONV( DATE(), 'DY' ) - 1 )
+   DATE_END = '12/31/' : ( OCONV( DATE(), 'DY' ) - 1 )
+
+RETURN
+
+CURR.YEAR:
+
+   DATE_BEG = '01/01/' : OCONV( DATE(), 'DY' )
+   DATE_END = '12/31/' : OCONV( DATE(), 'DY' )
+
+RETURN

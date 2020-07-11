@@ -1,0 +1,53 @@
+SUBROUTINE EMV_SHO_HLP_ATW( HLP_NAME )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:36 by Marcus
+
+! Platform: Any Pick; Win; AccuTerm; Any emulation
+
+! Function: Displays EMV,HLP HLP_NAME in AccuTerm's list-box.
+
+! Upcoming: Tracking which users have read which pages.
+
+   EQU IDENTITY TO 'EMV_SHO_HLP_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   READ HLP_TEXT FROM EMV_HLPS, HLP_NAME THEN
+
+      HLP_TEXT = CHANGE( HLP_TEXT, '@USERNAME@', OUR_USER_NAME )
+
+      HLP_HEAD = HLP_TEXT< 1 > ; DEL HLP_TEXT< 1 >
+      LST_HEAD = HLP_TEXT< 1 > ; DEL HLP_TEXT< 1 >
+
+      HLP_WDTH = 0
+      HLP_HGHT = DCOUNT( HLP_TEXT, @AM )
+
+      FOR LINE_NUM = 1 TO HLP_HGHT
+
+         LINE_LEN = LEN( HLP_TEXT< LINE_NUM > )
+
+         IF LINE_LEN GT HLP_WDTH THEN
+
+            HLP_WDTH = LINE_LEN
+
+         END
+
+      NEXT LINE_NUM
+
+      HLP_WDTH = INT( HLP_WDTH * 0.8 )
+
+      CALL EMV_LST_BOX_ATW( HLP_HEAD, LST_HEAD, HLP_TEXT, HLP_WDTH, HLP_HGHT, 0, ITEM_HIT )
+
+   END ELSE
+
+      CALL EMV_ALERT_BOX( '`EMV,HLP ' : HLP_NAME : '` not found!' )
+
+   END
+
+RETURN ;! to the calling program.

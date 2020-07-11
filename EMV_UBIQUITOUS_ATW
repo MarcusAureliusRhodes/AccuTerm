@@ -1,0 +1,67 @@
+!INCLUDE EMV_UBIQUITOUS_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/02/2019 16:31:00 by marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function: Populates ATW_FNT_WID_LST() with the widths of the characters
+!           in the font normally used by AccuTerm/Windows.
+
+!  EQU IDENTITY TO 'EMV_UBIQUITOUS_ATW'
+
+   COM /ATW_FNT_WID_COM/ ATW_FNT_WID_LST( 256 )
+
+   IF ASSIGNED( ATW_FNT_WID_LST( 256 ) ) ELSE
+
+      ATW_FNT_WID_VER  = ''
+
+   END
+
+   IF OCONV( ATW_FNT_WID_LST( 256 )[ 1, 8 ], 'MCU' ) EQ 'ACCUTERM' ELSE
+
+      PROMPT ''
+
+      CRT @( 0 ) : IDENTITY : ' is configuring AccuTerm ... ' : @( -5 ) : @( -13 ) : 'Press Enter to continue' : @( -14 ) : @( -6 ) : ' : ' : CHAR( 27 ) : CHAR( 2 ) : 'I' : CHAR( 13 ) :
+
+      INPUT EMULATOR :
+
+      CRT @( 0 ) : @( -4 ) : @( 0 ) :
+
+      IF OCONV( EMULATOR[ 1, 8 ], 'MCU' ) EQ 'ACCUTERM' THEN
+
+!        OPEN 'EMV,CTL' TO FILE_VAR THEN
+         OPEN 'DICT MR.BP' TO FILE_VAR THEN
+
+            MATREAD ATW_FNT_WID_LST FROM FILE_VAR, 'ATW_FNT_WID_LST' ELSE
+
+               CALL EMV_FNT_WID_TBL_ATW( MAT ATW_FNT_WID_LST )
+
+            END
+
+         END ELSE
+
+            CALL EMV_FNT_WID_TBL_ATW( MAT ATW_FNT_WID_LST )
+
+         END
+
+         ATW_FNT_WID_LST( 256 )  = EMULATOR
+
+      END ELSE
+
+         CRT @( 0 ) : 'You must connect from AccuTerm!  Exiting now.  ' : @( -5 ) : @( -13 ) : 'Press Enter to continue' : @( -14 ) : @( -6 ) : ' : ' :
+
+         INPUT DUMMY :
+
+         CRT @( 0 ) : @( -4 ) : @( 0 ) :
+
+         STOP
+
+      END
+
+   END

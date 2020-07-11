@@ -1,0 +1,288 @@
+PROGRAM EMV_POP_DLG_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 05/18/2017 09:17:24 by marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function: Test-drives EMV_POP_DLG_ATW
+
+! Syntax  : EMV_POP_DLG_ATW_TST
+
+! (Options: None (yet)
+
+! Examples: EMV_POP_DLG_ATW_TST
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: EMV_POP_DLG_ATW_TST
+
+!           VBA_CODE should be designed to delimit multiple responses with
+!           the pipe (|) character.
+
+   EQU IDENTITY TO 'EMV_POP_DLG_ATW_TST'
+   EQU OPT_HEAD TO "' Optimized: "
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB SET.VAR.VALS
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB GET.CMD.LINE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB GET.VBA.CODE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB CHK.VBA.CODE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB RUN.VBA.CODE
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB SHO.OUT.COME
+
+STOP
+
+SET.VAR.VALS:
+
+   HEAD_LEN  = LEN( OPT_HEAD )
+
+RETURN
+
+GET.CMD.LINE:
+
+!  CALL EMV_GET_CMD_LINE( RUN_MODE, FILENAME, PRG_NAME, VBA_NAME, OPTS_LST )
+
+   VBA_NAME  = 'WHATEVER'
+
+   IF VBA_NAME EQ '' THEN
+
+      VBA_NAME  = IDENTITY
+
+   END
+
+RETURN
+
+GET.VBA.CODE:
+
+   READ VBA_CODE FROM EMV_BINS, VBA_NAME : '.vba' ELSE
+
+      READ VBA_CODE FROM EMV_VBAS, VBA_NAME ELSE
+
+         VBA_CODE       = 'Dim Options As String'
+         VBA_CODE< -1 > = 'Dim S As Session'
+         VBA_CODE< -1 > = 'Set S=ActiveSession'
+         VBA_CODE< -1 > = 'Begin Dialog UserDialog -1,-1,400,80,"*** ERROR! ***"'
+         VBA_CODE< -1 > =    'Text 10,10,380,60,"Could not read EMV,VBA ' : VBA_NAME : '!"'
+         VBA_CODE< -1 > =    'OKButton 170,50,60,020'
+         VBA_CODE< -1 > = 'End Dialog'
+         VBA_CODE< -1 > = 'Dim PCEdMenu As UserDialog'
+         VBA_CODE< -1 > = 'rc%=Dialog(PCEdMenu,-1)'
+         VBA_CODE< -1 > = 'S.Output vbCr'
+
+      END
+
+      GOSUB PAK.VBA.CODE
+
+   END
+
+RETURN
+
+PAK.VBA.CODE:
+
+   OLD_CODE  = VBA_CODE
+
+   GOSUB CUT.THE.JUNK
+   GOSUB GET.ALL.STRINGS
+   GOSUB CUT.ANY.FORMATTING
+   GOSUB SET.THE.STRINGS
+
+   WRITE VBA_CODE ON EMV_BINS, VBA_NAME : '.vba'
+   WRITE OLD_CODE ON EMV_VBAS, VBA_NAME
+
+   ! Insert '! To force a recompile, DELETE EMV,BIN {progname}.vba'
+   ! message into OLD_CODE, if absent.
+
+RETURN
+
+CUT.THE.JUNK:
+
+   ! Strip any/all blank lines and comments of any type (Pick or VBA).
+
+   LINE_MAX  = DCOUNT( VBA_CODE, @AM )
+
+   FOR LINE_NUM = LINE_MAX TO 1 STEP -1
+
+      VBA_LINE  = TRIM( TRIM( VBA_CODE< LINE_NUM >, ' ', 'B' ), TAB, 'B' )
+
+      BEGIN CASE
+
+         CASE VBA_LINE[ 1, 8 ] EQ 'Sub Main' ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE[ 1, 7 ] EQ 'End Sub'  ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE[ 1, 4 ] EQ 'REM '     ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE[ 1, 1 ] EQ "'"        ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE[ 1, 1 ] EQ '!'        ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE[ 1, 1 ] EQ '*'        ; GOSUB CUT.THE.LINE
+         CASE VBA_LINE         EQ ''         ; GOSUB CUT.THE.LINE
+         CASE OTHERWISE                      ; VBA_CODE< LINE_NUM > = VBA_LINE
+
+      END CASE
+
+   NEXT LINE_NUM
+
+RETURN
+
+CUT.THE.LINE:
+
+   DEL VBA_CODE< LINE_NUM >
+
+   LINE_MAX -= 1
+
+RETURN
+
+GET.ALL.STRINGS:
+
+   ! Swaps all the strings in the VBA program  with  unique  placeholders,
+   ! storing the strings in an array, so we can  make  wholesale  replace-
+   ! ments without corrupting our strings,  and  then  swap  the  original
+   ! strings back in when done.
+
+   ! Comments must be cut first.
+
+   STRG_LST = ''
+   STRG_MAX = 0
+   LINE_MAX = DCOUNT( VBA_CODE, @AM )
+
+   FOR LINE_NUM = 1 TO LINE_MAX
+
+      VBA_LINE = VBA_CODE< LINE_NUM >
+
+      LOOP WHILE INDEX( VBA_LINE, '"', 2 ) OR INDEX( '"', VBA_LINE, 2 ) DO
+
+         STRG_MAX += 1
+
+         STRG_LST< STRG_MAX > = FIELD( VBA_LINE, '"', 2 )
+
+         VBA_LINE  = CHANGE( VBA_LINE, '"' : STRG_LST< STRG_MAX > : '"', '{' : STRG_MAX : '}' )
+
+      REPEAT
+
+      VBA_CODE< LINE_NUM > = VBA_LINE
+
+   NEXT LINE_NUM
+
+RETURN
+
+CUT.ANY.FORMATTING:
+
+   ! Strings must be protected first.
+
+   VBA_CODE = CHANGE( VBA_CODE, TAB, ' ' )
+
+   LOOP
+
+      SAMESIZE = LEN( VBA_CODE )
+
+      VBA_CODE = CHANGE( VBA_CODE, TAB, ' ' )
+      VBA_CODE = CHANGE( VBA_CODE, ' ' : @AM, @AM )
+!     VBA_CODE = CHANGE( VBA_CODE, @AM : @AM, @AM )
+      VBA_CODE = CHANGE( VBA_CODE, '  '     , ' ' )
+
+   UNTIL LEN( VBA_CODE ) EQ SAMESIZE DO REPEAT
+
+   PAIR_SET = '(  ),  , ==  &&  ++  --  //  ** '
+
+   FOR PAIR_NUM = 1 TO 16 STEP 2
+
+      THE_PAIR = PAIR_SET[ PAIR_NUM, 2 ]
+
+      LOOP
+
+         SAMESIZE = LEN( VBA_CODE )
+         VBA_CODE = CHANGE( VBA_CODE, THE_PAIR, TRIM( THE_PAIR ) )
+
+      UNTIL LEN( VBA_CODE ) EQ SAMESIZE DO REPEAT
+
+   NEXT PAIR_NUM
+
+RETURN
+
+SET.THE.STRINGS:
+
+   ! ... restores all the strings that were extracted by GET.ALL.STRINGS
+
+   FOR STRG_NUM = 1 TO STRG_MAX
+
+      VBA_CODE = CHANGE( VBA_CODE, '{' : STRG_NUM : '}', '"' : STRG_LST< STRG_NUM > : '"' )
+
+   NEXT STRG_NUM
+
+RETURN
+
+CHK.VBA.CODE:
+
+   CRT @( -1 ) : 'EMV,VBA ' : VBA_NAME : ' = ...'
+   CRT EMV_DECODE( VBA_CODE )
+
+   INPUT DUMMY
+
+RETURN
+
+RUN.VBA.CODE:
+
+   ! Beg Pick AP ====================== Generic Pick =====================
+
+   CALL EMV_POP_DLG_ATW( OUT_COME, VBA_CODE )
+
+   ! End Pick AP ====================== Generic Pick =====================
+   ! Beg Pick D3 ================= Rocket Software's D3 ==================
+
+   CALL EMV_POP_DLG_ATW( OUT_COME, VBA_CODE )
+
+   ! End Pick D3 ================= Rocket Software's D3 ==================
+   ! Beg Pick IC ================== InsterSytems' Cache ==================
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick IC ================== InsterSytems' Cache ==================
+   ! Beg Pick JB ==================== Zumasys' jBase =====================
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick JB ==================== Zumasys' jBase =====================
+   ! Beg Pick NR ================== Northgate's Reality ==================
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick NR ================== Northgate's Reality ==================
+   ! Beg Pick ON ========= Onware Software Corporations's Onware =========
+   ! End Pick ON ========= Onware Software Corporations's Onware =========
+   ! Beg Pick QM ================== Ladybridge's OpenQM ==================
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick QM ================== Ladybridge's OpenQM ==================
+   ! Beg Pick UD =============== Rocket Software's UniData ===============
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick UD =============== Rocket Software's UniData ===============
+   ! Beg Pick UV ============== Rocket Software's UniVerse ===============
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick UV ============== Rocket Software's UniVerse ===============
+   ! Beg Pick VU ================= ViaSystems' UniVision =================
+
+   OUT_COME  = EMV_POP_DLG_ATW( VBA_CODE )
+
+   ! End Pick VU ================= ViaSystems' UniVision =================
+
+RETURN
+
+SHO.OUT.COME:
+
+   CRT 'OUT_COME = `' : CHANGE( OUT_COME, '|', @AM ) : '`'
+   CRT
+   CRT 'Press Enter to continue...' :
+
+   INPUT DUMMY
+
+RETURN

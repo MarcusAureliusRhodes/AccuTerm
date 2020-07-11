@@ -1,0 +1,176 @@
+PROGRAM EMV_LST_BOX_FNT_SIZ_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 03/25/2019 19:51:50 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Helps one quickly and easily  create  character-width  tables
+!           for the current font.
+
+!           A Windows dialog-box is presented containing a  list  of  all
+!           the ANSI characters, 1-255, in a list-box 1,000  dialog-units
+!           wide.  The aim is to adjust the lengths of the bars of  chars
+!           until each one is as close as possible to 1,000  dialog-units
+!           in length.  The width of the list  is  then  divided  by  the
+!           number of characters in each bar, giving the  width  of  each
+!           character in dialog-units.
+
+!           Just scroll up-and-down the list, looking  for  any  bars  of
+!           chars that are too long or too  short.  Select  that  bar  of
+!           chars, and you'll  be  prompted  for  a  new  quantity.  Keep
+!           adjusting the widths of all the bars until all the lines  are
+!           as close to the same length as  the  width  of  the  list  as
+!           possible.
+
+!           The resulting table of character widths  is  rewritten  after
+!           every change, and a final list is printed to the screen in  a
+!           format suitable for copying into code.
+
+!           The table can be read by any program needing to measure  text
+!           that will appear in an AccuTerm dialog box, or wrap  text  to
+!           fit within a box.
+
+!           It might be best to ...
+
+!              COPY EMV,CTL EMV_LST_BOX_FNT_SIZ_ATW_TST
+!              (EMV_LST_BOX_FNT_SIZ_ATW_BAK
+
+!           ... before use.
+
+   EQU IDENTITY TO 'EMV_LST_BOX_FNT_SIZ_ATW_TST'
+
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   DIM WDTH_LST( 256 )
+
+   DLOG_HDR  = 'Character Width Table EMV,CTL ATW_FNT_WID_LST'
+   LIST_HDR  = 'Select a string to change its length:'
+   PREV_IDX  =    0
+   VIEW_HGT  =  480 ;! 40 lines of 12du-unit high characters
+   VIEW_WID  = 1035 ;! 1k + a bit to let us see the lines' ends.
+
+   MATREAD WDTH_LST FROM EMV_CTLS, 'ATW_FNT_WID_LST' ELSE
+
+      CALL EMV_FNT_WID_TBL_ATW( MAT WDTH_LST )
+
+   END
+
+   LOOP
+
+      ! Build the list of 'bars-of-chars'.
+
+      NAME_LST  = ''
+      VIEW_LST  = ''
+
+      FOR CHAR_IDX = 1 TO 255
+
+         NAME_LST< CHAR_IDX >  = CHAR_IDX
+
+         CHAR_WID  = WDTH_LST( CHAR_IDX )
+
+         IF CHAR_WID THEN
+
+            IF CHAR_IDX EQ 34 THEN
+
+               VIEW_LST< CHAR_IDX >  = STR( '*', INT( 1000 / CHAR_WID + 0.5 ) ) : '|'
+
+            END ELSE
+
+               VIEW_LST< CHAR_IDX >  = STR( CHAR( CHAR_IDX ), INT( 1000 / CHAR_WID + 0.5 ) ) : '|'
+
+            END
+
+         END ELSE
+
+            VIEW_LST< CHAR_IDX >  = '[N/A]'
+
+         END
+
+      NEXT CHAR_IDX
+
+      ! Move the selector to the next row.
+
+      CHAR_IDX  = PREV_IDX + 1
+
+      ! Offer the list.
+
+      CALL EMV_LST_BOX_ATW( CHAR_IDX, NAME_LST, VIEW_LST, LIST_HDR, DLOG_HDR )
+
+      ! Get the actual response.
+
+      THE_LINE  = VIEW_LST< CHAR_IDX >
+      LINE_LEN  = LEN( THE_LINE )
+      PREV_IDX  = CHAR_IDX
+
+      IF CHAR_IDX THEN
+
+         ! Get the number of chars the width works out to.
+
+         CHAR_WID  = WDTH_LST( CHAR_IDX )
+
+         IF CHAR_WID THEN
+
+            LINE_LEN  = INT( 1000 / CHAR_WID + 0.5 )
+
+         END ELSE
+
+            LINE_LEN  = 0
+
+         END
+
+         CRT @( 0 ) : 'How many `' : CHAR( CHAR_IDX ) : @( 11 ) : '` ? ' : LINE_LEN 'L#3 ' : @( 15 ) :
+
+         PREV_LEN  = LINE_LEN
+
+         INPUT LINE_LEN :
+
+         IF LINE_LEN EQ '' THEN
+
+            LINE_LEN  = PREV_LEN
+
+         END
+
+         ! Work out, and store the new char width.
+
+         IF LINE_LEN NE PREV_LEN AND NUM( LINE_LEN ) AND LINE_LEN GT 0 AND LINE_LEN LE 300 THEN
+
+            WDTH_LST( CHAR_IDX )  = 1000 / LINE_LEN
+
+            MATWRITE WDTH_LST ON EMV_CTLS, 'ATW_FNT_WID_LST'
+
+         END
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   FOR CHAR_IDX = 1 TO 255
+
+      WDTH_INT  =       FIELD( WDTH_LST( CHAR_IDX ), '.', 1 )
+      WDTH_DEC  = TRIM( FIELD( WDTH_LST( CHAR_IDX ), '.', 2 ), '0', 'T' )
+
+      IF WDTH_DEC EQ '' THEN
+
+         CHAR_WID  = WDTH_INT 'R#2     '
+
+      END ELSE
+
+         CHAR_WID  = WDTH_INT 'R#2.' : WDTH_DEC 'L#4'
+
+      END
+
+      CRT '   WDTH_LST( ' : CHAR_IDX 'R#3 ) = ' : CHAR_WID : ' ;! ' : CHAR( CHAR_IDX )
+
+   NEXT CHAR_IDX
+
+STOP

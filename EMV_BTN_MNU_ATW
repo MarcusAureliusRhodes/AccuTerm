@@ -1,0 +1,109 @@
+SUBROUTINE EMV_BTN_MNU_ATW( BUTTON_I, BOX_HEAD, BUTTON_L )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 09/04/2014 13:00:30 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Presents the user with a menu of buttons.
+
+! +------------------+
+! |_____Main_menu____|
+! | +--------------+ |
+! | |  New report  | |
+! | +--------------+ |
+! | +--------------+ |
+! | |  Get report  | |
+! | +--------------+ |
+! | +--------------+ |
+! | |  Save report | |
+! | +--------------+ |
+! | +--------------+ |
+! | | Build report | |
+! | +--------------+ |
+! | +--------------+ |
+! | |     Help     | |
+! | +--------------+ |
+! | +--------------+ |
+! | |    Cancel    | |
+! | +--------------+ |
+! +------------------+
+
+! Var_name IO Typ Description_____________________________________________
+! BUTTON_I  < NUM index of BUTTON_L selected by the user
+! BOX_HEAD >  STR title of the dialog-box
+! BUTTON_L >  1DA labels of buttons to add to the dialog-box
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_BTN_MNU_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF ASSIGNED( BOX_HEAD ) ELSE BOX_HEAD = '???'
+   IF ASSIGNED( BUTTON_L ) ELSE BUTTON_L = ''
+
+   EQU BUTTON_H TO 22
+   EQU BORDER_W TO 20
+   EQU BORDER_H TO  7
+   EQU AVG_WDTH TO  8
+
+   BUTTON_W = 15 ;! At least as wide as 'Cancel'
+   BUTTON_Z = DCOUNT( BUTTON_L, @AM )
+
+   FOR BUTTON_I = 1 TO BUTTON_Z
+
+      IF LEN( BUTTON_L< BUTTON_I > ) GT BUTTON_W THEN
+
+         BUTTON_W = LEN( BUTTON_L< BUTTON_I > )
+
+      END
+
+   NEXT BUTTON_I
+
+   BUTTON_W =   BUTTON_W * AVG_WDTH
+   DIALOG_H = ( BUTTON_H + BORDER_H ) * ( BUTTON_Z + 1 ) + BORDER_H
+   DIALOG_W =   BUTTON_W + ( BORDER_W * 2 )
+   BUTTON_Y =   BORDER_H
+
+   VBA_CODE       = 'Dim S As Session'
+   VBA_CODE< -1 > = 'Set S=ActiveSession'
+   VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : DIALOG_W : ',' : DIALOG_H : ',"' : BOX_HEAD : '"'
+
+   FOR BUTTON_I = 1 TO BUTTON_Z
+
+      VBA_CODE< -1 > = 'PushButton ' : BORDER_W : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"' : BUTTON_L< BUTTON_I > : '"'
+
+      BUTTON_Y += BUTTON_H + BORDER_H
+
+   NEXT BUTTON_I
+
+   VBA_CODE< -1 > = 'CancelButton ' : BORDER_W : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H
+   VBA_CODE< -1 > = 'End Dialog'
+   VBA_CODE< -1 > = 'Dim dlg As UserDialog'
+   VBA_CODE< -1 > = 'S.Output CStr(Dialog(dlg,1))&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : CHAR( 27 ) : CHAR( 2 ) : 'P' : CHANGE( VBA_CODE, @AM, CHAR( 25 ) )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT BUTTON_I :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN ;! to the calling program.

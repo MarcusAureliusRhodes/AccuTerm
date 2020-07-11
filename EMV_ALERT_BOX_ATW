@@ -1,0 +1,66 @@
+SUBROUTINE EMV_ALERT_BOX_ATW( MESSAGES )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/24/2016 16:42:38 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Shows MESSAGES in a Windows MsgBox with Ok button.
+
+! Var_name IO Typ Description____________________________________________
+! MESSAGES >< Str Text to be displayed in the message-box.
+!                 If null or unassigned, a substitute message is display-
+!                 ed, and returned.
+!                 There's no need to neutralize any string delimiters.
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: N/A
+
+! Catalog : EMV_ALERT_BOX_ATW
+
+! New name: N/A
+
+   EQU IDENTITY TO 'EMV_ALERT_BOX_ATW'
+
+   IF UNASSIGNED( MESSAGES ) THEN MESSAGES = ''
+   IF        LEN( MESSAGES ) ELSE MESSAGES = '?!? No message ?!?'
+
+   ! Literal double-quotes can foul up a VBA  script,  single-quotes  can
+   ! foul up DataBasic, and I use the backtick for my  own  purposes,  so
+   ! they all have to go.
+
+   ! Ain't misbehavin' -> Ain"&Chr$(39)&"t misbehavin"&Chr$(39)&"
+
+   IM_FIXED  = CHANGE( MESSAGES, '"', '"&Chr$(34)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, "'", '"&Chr$(39)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, '\', '"&Chr$(92)&"' )
+   IM_FIXED  = CHANGE( IM_FIXED, '`', '"&Chr$(96)&"' )
+
+   ! Next, install the line-breaks.
+
+   IM_FIXED  = '"' : CHANGE( IM_FIXED, '~', '"&vbCrLf&"' ) : '"'
+
+   ! "&Chr$(39)&""&Chr$(39)&" -> "&Chr$(39)&Chr$(39)&"
+
+   IM_FIXED  = CHANGE( IM_FIXED, '&""&', '&' )
+
+   ! Ain"&Chr$(39)&"t misbehavin"&Chr$(39)&" -> ...
+   ! Ain"&Chr$(39)&"t misbehavin"&Chr$(39)
+
+   IF IM_FIXED[ 1, 3 ] EQ '""&' THEN IM_FIXED = IM_FIXED[ 4, LEN( IM_FIXED )     ]
+   IF IM_FIXED[   3  ] EQ '&""' THEN IM_FIXED = IM_FIXED[ 1, LEN( IM_FIXED ) - 3 ]
+
+   VBA_CODE  = CHAR( 27 ) : CHAR( 2 )
+   VBA_CODE := 'Pdim s as accutermclasses.session'
+   VBA_CODE := '`set s = activesession'
+   VBA_CODE := '`MsgBox ' : IM_FIXED : ',0,"ATTENTION!"'
+
+   CRT CHANGE( VBA_CODE, '`', CHAR( 25 ) ) : CHAR( 13 ) :
+
+RETURN ;! to the calling program.

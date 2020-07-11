@@ -1,0 +1,63 @@
+SUBROUTINE EMV_DLD_VIA_ATW( PICK_FILENAME, PICK_ITEMNAME, TERM_PATHNAME, TERM_FILENAME )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:16 by Marcus
+
+! Platform: Any Pick; Any OS, AccuTerm; Any emulation
+
+! Function: Essentially a distillation of Asent's pick-host program, FT
+
+! Syntax  :
+
+! Examples:
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_DLD_VIA_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   ! prepare params
+
+   DIM PARAMS( 30 )
+
+   CALL FTINIT( MAT PARAMS, FV )
+
+   PARAMS( 21 ) = 1 ;! 0 = upload, 1 = download
+   PARAMS( 25 ) = 1 ;! 0 = ascii,  1 = kermit
+
+   ! prepare vars
+
+   DIM VARS( 25 )
+
+   MAT VARS      = ''
+
+   VARS( 12 )   = PICK_FILENAME
+   VARS( 14 )   = PICK_ITEMNAME
+   VARS( 21 )   = TERM_PATHNAME
+   VARS( 23 )   = TERM_FILENAME
+
+   ! prepare clienv
+
+   DIM CLIENV( 10 )
+
+   MAT CLIENV   = ''
+
+   ! perform the transfer
+
+   OPEN PICK_FILENAME TO VARS( 11 ) THEN
+
+      CALL FTMODE( STAT, 'ftrditms', MAT PARAMS, MAT VARS, MAT CLIENV )
+
+   END
+
+!  call ftrditms('',0,0,eof,can,stat,mat params,mat vars)
+
+RETURN ;! to the calling program.

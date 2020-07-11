@@ -1,0 +1,24 @@
+PROGRAM EMV_GET_DT_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/20/2014 22:00:46 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_GET_DT_ATW
+
+   THE_DATE = DATE()
+
+   CALL EMV_GET_DT_ATW( THE_DATE, 'Choose the date' )
+
+   ALRT_TXT  = '~ Original date = `' : OCONV( DATE()  , 'D4/' ) : '`~'
+   ALRT_TXT :=   'Selected date = `' : OCONV( THE_DATE, 'D4/' ) : '`~~'
+
+   CALL EMV_ALERT_BOX_ATW( ALRT_TXT )
+
+STOP

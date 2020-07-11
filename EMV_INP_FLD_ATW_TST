@@ -1,0 +1,31 @@
+PROGRAM EMV_INP_FLD_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 01/11/2019 12:37:04 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_INP_FLD_ATW.
+
+   EQU IDENTITY TO 'EMV_INP_FLD_ATW_TST'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF
+
+   PROMPTXT  = 'Enter your full name in UPPER-CASE'
+   HEAD_TXT  = 'Entry Test'
+
+   CALL EMV_INP_FLD_ATW( RESPONSE, PROMPTXT, HEAD_TXT )
+   CALL EMV_ALERT_BOX_ATW( RESPONSE )
+
+   PROMPTXT  = 'Change your full name in Title-Case'
+   HEAD_TXT  = 'Entry Test'
+
+   CALL EMV_INP_FLD_ATW( RESPONSE, PROMPTXT, HEAD_TXT )
+   CALL EMV_ALERT_BOX_ATW( RESPONSE )
+
+STOP

@@ -1,0 +1,72 @@
+PROGRAM EMV_CRT_SET_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 02/21/2020 16:54:00 by marcus
+
+! Platform: Any Pick; Any OS; AcceTerm; Any Emulation
+
+! Function: Sets both Pick's and AccuTerms terminal geometry.
+
+! Params  : columns,rows
+
+! Catalog : EMV_CRT_SET_ATW
+
+! Syntax  : EMV_CRT_SET_ATW 240,67
+
+   EQU IDENTITY TO 'EMV_CRT_SET_ATW'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF
+
+   EQU STX   TO CHAR(  2 )
+   EQU CR    TO CHAR( 13 )
+   EQU EM    TO CHAR( 25 )
+   EQU ESC   TO CHAR( 27 )
+
+   PROMPT ''
+
+   TRM_COLS  = ( @SENTENCE )[ 6 ]
+
+   TRM_ROWS  = TRIM( FIELD( TRM_COLS, ',', 2 ) )
+   TRM_COLS  = TRIM( FIELD( TRM_COLS, ',', 1 ) )
+
+   IF LEN( TRM_ROWS ) AND NUM( TRM_ROWS ) AND TRM_ROWS GT 24 ELSE TRM_ROWS  = 24
+   IF LEN( TRM_COLS ) AND NUM( TRM_COLS ) AND TRM_COLS GT 80 ELSE TRM_COLS  = 80
+
+   EXECUTE 'TERM ' : TRM_COLS : ',' : TRM_ROWS
+
+   ECHO OFF
+
+   CRT '  Checking... ' : ESC : STX : 'I' :
+
+   INPUT WHATEVER : FOR 1 THEN
+
+      VBA_CODE        = 'dim s as accutermclasses.session'
+      VBA_CODE< -1 >  = 'set s=activesession'
+
+      IF TRM_ROWS GT 24 OR TRM_COLS GT 80 THEN
+
+         VBA_CODE< -1 >  = 's.extcols=' : TRM_COLS
+         VBA_CODE< -1 >  = 's.extrows=' : TRM_ROWS
+
+      END
+
+      VBA_CODE< -1 >  = 's.ScrMode=' : NOT( ( TRM_COLS EQ 80 ) AND ( TRM_ROWS EQ 24 ) )
+      VBA_CODE< -1 >  = 'accuterm.activate'
+      VBA_CODE< -1 >  = 's.activate'
+
+      CRT ESC : STX : 'P ' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+   END ELSE
+
+      CRT @( 0 ) : 'AccuTerm not found!  ' : IDENTITY : ' can`t set its screen size.'
+
+   END
+
+   ECHO ON
+
+STOP

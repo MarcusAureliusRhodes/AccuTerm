@@ -1,0 +1,197 @@
+SUBROUTINE EMV_GET_DT_ATW( THE_DATE, THE_TITLE )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/18/2014 22:21:41 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Presents the AccuTerm user a Windows  date-picker  that  looks
+!           and acts as familiar as possible given the limits of the SAX/-
+!           WinWrap Basic engine, which has  neither  a  date-picker,  nor
+!           even a  grid/table control outside the GUI form-editor.
+
+   EQU IDENTITY TO 'EMV_GET_DT_ATW'
+   EQU STX      TO CHAR(  2 )
+   EQU CR       TO CHAR( 13 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+   EQU BUTTON_W TO 44
+   EQU BUTTON_H TO 22
+   EQU BORDER_L TO 20
+   EQU BORDER_T TO 10
+
+   PROMPT ''
+
+   DIALOG_W = BUTTON_W *  7 +  7 + 2 * BORDER_L
+   DIALOG_H = BUTTON_H * 10 + 10 + 2 * BORDER_T
+   DIALOG_C = INT( DIALOG_W / 2 )
+   YEAR_HOR = DIALOG_C - 20
+   MTHX_LST = CHANGE( '58|64|46|30|34|32|30|48|72|52|70|70', '|', @AM )
+   THE_YEAR = OCONV( THE_DATE, 'DY' )
+   THE_MNTH = OCONV( THE_DATE, 'DM' )
+   DAY_DATE = OCONV( THE_DATE, 'DD' )
+
+   FOR MNTH_NUM = 1 TO 12
+
+      MTHX_LST< MNTH_NUM > = DIALOG_C - INT( MTHX_LST< MNTH_NUM > / 2 )
+
+   NEXT MNTH_NUM
+
+   LOOP
+
+      GOSUB BUILD.THE.DIALOG
+
+      BEGIN CASE
+
+         CASE THE_BTTN EQ 0 ; GOSUB ABORT.THE.MISSION
+         CASE THE_BTTN EQ 1 ; GOSUB LOWER.THE.YEAR
+         CASE THE_BTTN EQ 2 ; GOSUB RAISE.THE.YEAR
+         CASE THE_BTTN EQ 3 ; GOSUB LOWER.THE.MONTH
+         CASE THE_BTTN EQ 4 ; GOSUB RAISE.THE.MONTH
+         CASE 1             ; GOSUB CLOSE.THE.DATE
+
+      END CASE
+
+   WHILE THE_BTTN DO REPEAT
+
+RETURN ;! to the calling program.
+
+BUILD.THE.DIALOG:
+
+   THE_DATE = ICONV( THE_MNTH : '/' : DAY_DATE : '/' : THE_YEAR, 'D' )
+   MNTH_BEG = ICONV( THE_MNTH : '/' :   '01'   : '/' : THE_YEAR, 'D' )
+   MNTH_END = MNTH_BEG - OCONV( MNTH_BEG + 31, 'DD' ) + 31
+   WEEK_DAY = OCONV( MNTH_BEG, 'DW' ) + 1
+   WEEK_DAY = WEEK_DAY - ( 7 * ( WEEK_DAY GT 7 ) )
+
+   BUTTON_Z = 1
+   BUTTON_G = BUTTON_W + 1
+   BUTTON_L = BORDER_L + BUTTON_G * 6
+   BUTTON_X = BORDER_L + BUTTON_G * ( WEEK_DAY - 1 )
+
+!   Set s = Sessions.Add( ATCFPath$, 2, 1 )
+!   s.Reset atResetTerminal
+!   s.InputMode = 0
+!   Begin Dialog UserDialog 280, 230, "Test Menu"
+!      PushButton 10,  20, 260,  22, "Reset databases"
+!      PushButton 10,  50, 260,  22, "Xfer approvals from GARS to GPW"
+!      PushButton 10,  80, 260,  22, "Run Test 005 (Domestic Order)"
+!      PushButton 10, 110, 260,  22, "Run Test 006 (Foreign Order)"
+!      PushButton 10, 140, 260,  22, "Run Test 012 (Nightly Purge)"
+!      PushButton 10, 170, 260,  22, "Help"
+!      PushButton 10, 200, 260,  22, "Quit"
+!   End Dialog
+!   Dim MainMenu As UserDialog
+
+!  VBA_CODE  =      'Dim S As Session'
+!  VBA_CODE< -1 > = 'Set S=ActiveSession'
+   VBA_CODE  =      'InitSession.Activate'
+   VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : DIALOG_W : ',' : DIALOG_H : ',"' : THE_TITLE : '"'
+   VBA_CODE< -1 > =    'Text ' : YEAR_HOR             : ',13,120,' : BUTTON_H : ',"' : THE_YEAR : '",.Year'
+   VBA_CODE< -1 > =    'Text ' : MTHX_LST< THE_MNTH > : ',38,130,' : BUTTON_H : ',"' : OCONV( OCONV( THE_DATE, 'DMA' ), 'MCT' ) : '",.Month'
+   VBA_CODE< -1 > =    'Text ' : BORDER_L : ',60,' : DIALOG_W : ',21,"  Sun     Mon    Tue    Wed    Thu       Fri      Sat",.Z'
+   VBA_CODE< -1 > =    'PushButton ' : BORDER_L : ',' : BORDER_T : ',' : BUTTON_W : ',' : BUTTON_H : ',"<"'
+   VBA_CODE< -1 > =    'PushButton ' : BUTTON_L : ',' : BORDER_T : ',' : BUTTON_W : ',' : BUTTON_H : ',">"'
+
+   BUTTON_Y = BORDER_T + BUTTON_H + 1
+
+   VBA_CODE< -1 > =    'PushButton ' : BORDER_L : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"<"'
+   VBA_CODE< -1 > =    'PushButton ' : BUTTON_L : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',">"'
+
+   BUTTON_Y = BORDER_T + ( BUTTON_H + 1 ) * 3
+
+   FOR DATE_NUM = MNTH_BEG TO MNTH_END
+
+      VBA_CODE< -1 > = 'PushButton ' : BUTTON_X : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"' : BUTTON_Z : '"'
+
+      BUTTON_X += BUTTON_G
+      BUTTON_Z += 1
+
+      IF BUTTON_X GT BUTTON_L THEN
+
+         BUTTON_X  = BORDER_L
+         BUTTON_Y += BUTTON_H
+
+      END
+
+   NEXT DATE_NUM
+
+   VBA_CODE< -1 > = 'CancelButton ' : BORDER_L : ',' : ( BUTTON_H * 10 ) : ',' : ( DIALOG_W - BORDER_L * 2 ) : ',' : BUTTON_H
+   VBA_CODE< -1 > = 'End Dialog'
+   VBA_CODE< -1 > = 'Dim dlg As UserDialog'
+!  VBA_CODE< -1 > = 'S.Output CStr(Dialog(dlg,' : ( DAY_DATE + 4 ) : '))&vbCr'
+   VBA_CODE< -1 > = 'InitSession.Output CStr(Dialog(dlg,' : ( DAY_DATE + 4 ) : '))&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT THE_BTTN :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN
+
+ABORT.THE.MISSION:
+
+   THE_DATE = ''
+
+RETURN
+
+RAISE.THE.YEAR:
+
+   THE_YEAR += 1
+
+RETURN
+
+LOWER.THE.YEAR:
+
+   THE_YEAR -= 1
+
+RETURN
+
+RAISE.THE.MONTH:
+
+   THE_MNTH = OCONV( THE_DATE, 'DM' ) + 1
+
+   IF THE_MNTH GT 12 THEN
+
+      THE_MNTH   = 1
+      THE_YEAR += 1
+
+   END
+
+RETURN
+
+LOWER.THE.MONTH:
+
+   THE_MNTH = OCONV( THE_DATE, 'DM' ) - 1
+
+   IF THE_MNTH LT 1 THEN
+
+      THE_MNTH   = 12
+      THE_YEAR -= 1
+
+   END
+
+RETURN
+
+CLOSE.THE.DATE:
+
+   THE_DATE = ICONV( THE_MNTH : '/' : ( THE_BTTN - 4 ) : '/' : THE_YEAR, 'D' )
+   THE_BTTN = 0
+
+RETURN

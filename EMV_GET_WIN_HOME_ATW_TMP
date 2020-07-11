@@ -1,0 +1,235 @@
+! Beg Pick IC ================== InterSystems Cache ===================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick IC ================== InterSystems Cache ===================
+! Beg Pick D3 ======================= Rocket D3 =======================
+
+SUBROUTINE EMV_GET_WIN_HOME_ATW( WIN_HOME )
+
+! End Pick D3 ======================= Rocket D3 =======================
+! Beg Pick JB ===================== Zumasys jBase =====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick JB ===================== Zumasys jBase =====================
+! Beg Pick NR =================== Northgate Reality ===================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick NR =================== Northgate Reality ===================
+! Beg Pick QM =================== Ladybridge OpenQM ===================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick QM =================== Ladybridge OpenQM ===================
+! Beg Pick UD ==================== Rocket UniData =====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick UD ==================== Rocket UniData =====================
+! Beg Pick UV ==================== Rocket UniVerse ====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick UV ==================== Rocket UniVerse ====================
+! Beg Pick VU ================= ViaSystems UniVision ==================
+
+FUNCTION EMV_GET_WIN_HOME_ATW
+
+! End Pick VU ================= ViaSystems UniVision ==================
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+! Modified: 06/19/2019 12:02:09 by marcus
+
+! Platform: Any Pick; Any OS; Accuterm; Any Emulation
+
+! Description: Returns the Windows7 user's full home path,  defaulting  to
+! C:\Users\Public\Downloads\
+
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   VBA_PROG  = '{027}{002}PInitSession.Output MyDocPath() & Chr$(13)'
+   VBA_PROG := '{025}End Sub'
+   VBA_PROG := '{025}Private Declare Function SHGetFolderPath& Lib "shfolder.'
+   VBA_PROG :=      'dll" Alias "SHGetFolderPathA" (ByVal hwnd&,ByVal fldr&,B'
+   VBA_PROG :=      'yVal tok&,ByVal dw&,ByVal Path$)'
+   VBA_PROG := '{025}Function MyDocPath() As String'
+   VBA_PROG :=    '{025}Dim path As String'
+   VBA_PROG :=    '{025}On Error Resume Next'
+   VBA_PROG :=    '{025}path =String$(1000,0)'
+   VBA_PROG :=    '{025}SHGetFolderPath 0,5,0,0,path'
+   VBA_PROG :=    '{025}path =Left$(path,InStr(path,Chr$(0))-1)'
+   VBA_PROG :=    '{025}If Len(path) Then'
+   VBA_PROG :=       '{025}If Right$(path,1)<>"\" Then'
+   VBA_PROG :=         '{025}path =path & "\"'
+   VBA_PROG :=       '{025}End If'
+   VBA_PROG :=    '{025}End If'
+   VBA_PROG :=    '{025}MyDocPath =path'
+   VBA_PROG := '{025}End Function'
+   VBA_PROG := '{025}Sub Dummy{013}'
+
+   CRT EMV_ENCODE( VBA_PROG ) :
+
+   ECHO OFF
+
+   ! Beg Pick IC ================== InterSystems Cache ===================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick IC ================== InterSystems Cache ===================
+   ! Beg Pick D3 ======================= Rocket D3 =======================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick D3 ======================= Rocket D3 =======================
+   ! Beg Pick JB ===================== Zumasys jBase =====================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = 'C:\Users\Public\Downloads\'
+
+   END
+
+   ! End Pick JB ===================== Zumasys jBase =====================
+   ! Beg Pick NR =================== Northgate Reality ===================
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick NR =================== Northgate Reality ===================
+   ! Beg Pick QM =================== Ladybridge OpenQM ===================
+
+   LOOP
+
+      IN CHR FOR 3 THEN
+
+         WIN_HOME := CHAR( CHR )
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick QM =================== Ladybridge OpenQM ===================
+   ! Beg Pick UD ==================== Rocket UniData =====================
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick UD ==================== Rocket UniData =====================
+   ! Beg Pick UV ==================== Rocket UniVerse ====================
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick UV ==================== Rocket UniVerse ====================
+   ! Beg Pick VU ================= ViaSystems UniVision ==================
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick VU ================= ViaSystems UniVision ==================
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+! Beg Pick IC ================== InterSystems Cache ===================
+
+RETURN( WIN_HOME )
+
+! End Pick IC ================== InterSystems Cache ===================
+! Beg Pick D3 ======================= Rocket D3 =======================
+
+RETURN
+
+! End Pick D3 ======================= Rocket D3 =======================
+! Beg Pick JB ===================== Zumasys jBase =====================
+
+RETURN( WIN_HOME )
+
+! End Pick JB ===================== Zumasys jBase =====================
+! Beg Pick NR =================== Northgate Reality ===================
+
+RETURN( WIN_HOME )
+
+! End Pick NR =================== Northgate Reality ===================
+! Beg Pick QM =================== Ladybridge OpenQM ===================
+
+RETURN( WIN_HOME )
+
+! End Pick QM =================== Ladybridge OpenQM ===================
+! Beg Pick UD ==================== Rocket UniData =====================
+
+RETURN( WIN_HOME )
+
+! End Pick UD ==================== Rocket UniData =====================
+! Beg Pick UV ==================== Rocket UniVerse ====================
+
+RETURN( WIN_HOME )
+
+! End Pick UV ==================== Rocket UniVerse ====================
+! Beg Pick VU ================= ViaSystems UniVision ==================
+
+RETURN( WIN_HOME )
+
+! End Pick VU ================= ViaSystems UniVision ==================

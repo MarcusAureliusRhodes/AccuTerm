@@ -1,0 +1,111 @@
+PROGRAM EMV_MSG_BOX_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 09/27/2014 20:39:30 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_MSG_BOX_ATW.
+
+! Upcoming:
+
+   EQU IDENTITY TO 'EMV_MSG_BOX_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   TTL_TEXT  = 'BEEEEEEEEEEEEEEEEEEEP!'
+
+   MSG_TEXT  = 'This is a test.  For the next sixty seconds, this station'
+   MSG_TEXT := ' will conduct a test of the emergency broadcast system.  '
+   MSG_TEXT := 'This is only a test.||This is a test of the Emergency Bro'
+   MSG_TEXT := 'adcast System.  The broadcasters of your area, in volunta'
+   MSG_TEXT := 'ry cooperation with the federal, state and local authorit'
+   MSG_TEXT := 'ies, have developed this system to keep you informed in t'
+   MSG_TEXT := 'he event of an emergency.||If this had been an actual eme'
+   MSG_TEXT := 'rgency, you would have been instructed where to tune in y'
+   MSG_TEXT := 'our area for news and official information.'
+
+   MSG_TEXT< -1 >  = ' '
+   MSG_TEXT< -1 >  = 'Do you get the message?'
+
+!  ICON_TYP  = 0 ;! None
+!  ICON_TYP  = 1 ;! Stop
+   ICON_TYP  = 2 ;! Qestion
+!  ICON_TYP  = 3 ;! Attention
+!  ICON_TYP  = 4 ;! Information
+
+!  DBUTTONS  = 0 ;! Ok
+!  DBUTTONS  = 1 ;! Ok/Cancel
+!  DBUTTONS  = 2 ;! Abort/Retry/Ignore
+   DBUTTONS  = 3 ;! Yes/No/Cancel
+!  DBUTTONS  = 4 ;! Yes/No
+!  DBUTTONS  = 5 ;! Retry/Cancel
+
+!  DFLT_BTN  = 0 ;! 1st button
+   DFLT_BTN  = 1 ;! 2nd button
+!  DFLT_BTN  = 2 ;! 3rd button
+
+   PROMPT ''
+
+   OPTN_LST      = 'Choose Icon'
+   OPTN_LST< 2 > = 'Choose Button(s)'
+   OPTN_LST< 3 > = 'Set Default button'
+   OPTN_LST< 4 > = 'Show Dialog'
+
+   ICON_LST      = '_ None'
+   ICON_LST< 2 > = 'X Stop'
+   ICON_LST< 3 > = '? Question'
+   ICON_LST< 4 > = '! Attention'
+   ICON_LST< 5 > = 'i Information'
+
+   BTTN_LST      = '[ OK ]'
+   BTTN_LST< 2 > = '[ OK ] [ Cancel ]'
+   BTTN_LST< 3 > = '[ Abort ] [ Retry ] [ Ignore ]'
+   BTTN_LST< 4 > = '[ Yes ] [ No ] [ Cancel ]'
+   BTTN_LST< 5 > = '[ Yes ] [ No ]'
+   BTTN_LST< 6 > = '[ Retry ] [ Cancel ]'
+
+   ICON_TYP  = 1
+   DBUTTONS  = 1
+   DFLT_BTN  = 1
+
+   LOOP
+
+      CALL EMV_BTN_MNU_ATW( OPTN_NUM, 'Choose the option to change', OPTN_LST )
+
+   WHILE OPTN_NUM DO
+
+      BEGIN CASE
+
+         CASE OPTN_NUM EQ 1
+
+            CALL EMV_LST_BOX_ATW( 'Choose the icon'          , 'Just one', ICON_LST, DLOG_WID, DLOG_HGT, FONT_WID, ICON_TYP )
+
+         CASE OPTN_NUM EQ 2
+
+            CALL EMV_LST_BOX_ATW( 'Choose the button(s)'     , 'Just one', BTTN_LST, DLOG_WID, DLOG_HGT, FONT_WID, DBUTTONS )
+
+            DFLT_LST  = CHANGE( TRIM( CHANGE( CHANGE( BTTN_LST< DBUTTONS >, '[', '' ), ']', '' ) ), ' ', @AM )
+
+         CASE OPTN_NUM EQ 3
+
+            CALL EMV_LST_BOX_ATW( 'Choose the default button', 'Just one', DFLT_LST, DLOG_WID, DLOG_HGT, FONT_WID, DFLT_BTN )
+
+      END CASE
+
+      CALL EMV_MSG_BOX_ATW( RESPONSE, TTL_TEXT, MSG_TEXT, ( ICON_TYP - 1 ), ( DBUTTONS - 1 ), ( DFLT_BTN - 1 ) )
+
+      RESPONSE  = 'You selected button `' : RESPONSE : '`'
+
+      CALL EMV_ALERT_BOX_ATW( RESPONSE )
+
+   REPEAT
+
+   CRT 'CALL EMV_MSG_BOX_ATW( RESPONSE, TTL_TEXT, MSG_TEXT, ' : ( ICON_TYP - 1 ) : ', ' : ( DBUTTONS - 1 ) : ', ' : ( DFLT_BTN - 1 ) : ' )'
+
+STOP

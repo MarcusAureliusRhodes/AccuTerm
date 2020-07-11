@@ -1,0 +1,61 @@
+PROGRAM EMV_YN_BOX_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:38 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_YN_BOX_ATW
+
+! +----------------------------+
+! |__________Box Head__________|
+! |                            |
+! | Your message goes here!    |
+! |                            |
+! | +------+ +------+ +------+ |
+! | | Help | |Cancel| |  Ok  | |
+! | +------+ +------+ +------+ |
+! +----------------------------+
+
+! Variable IO Typ Description____________________________________________
+! RESPONSE  < Int 0=No/Cancel/Quit/Back
+!                 1=Yes/Ok/Continue/Next
+!                 2=Help
+! HEADLINE >  Str Title of the dialog-box
+! MESSAGES >  1DA AM=paragraph break.  Gets wrapped into a variable-sized
+!                 rectangle.
+! BTTN_SET >  Int 1=Ok/Cancel
+!                 2=Yes/No
+!                 3=Continue/Quit
+!                 4=Next/Back
+! MAN_PAGE >  Str Help page name, or null for no help button at all.
+
+   EQU IDENTITY TO 'EMV_YN_BOX_ATW_TST'
+
+!  HEADLINE  = 'EMV`s Yes/No Box (ATW) Test'
+   HEADLINE  = 'EMVs Yes/No Box (ATW) Test'
+
+   MESSAGES  = 'This is a test.  This is only a test.  Had there been an'
+   MESSAGES := ' actual message, you would have actually been running a '
+   MESSAGES := 'real program, and not this test-buck.  Now get back to w'
+   MESSAGES := 'ork!'
+
+   BTTN_SET  = 2
+   MAN_PAGE  = IDENTITY
+
+   CALL EMV_YN_BOX_ATW( RESPONSE, HEADLINE, MESSAGES, BTTN_SET, MAN_PAGE )
+
+   BEGIN CASE
+
+      CASE RESPONSE EQ 0 ; CRT 'RESPONSE = ' : RESPONSE
+      CASE RESPONSE EQ 1 ; CRT 'RESPONSE = ' : RESPONSE
+      CASE RESPONSE EQ 2 ; CALL EMV_SHO_HLP_ATW( IDENTITY )
+
+   END CASE
+
+STOP

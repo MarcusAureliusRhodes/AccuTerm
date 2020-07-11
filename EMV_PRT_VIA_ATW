@@ -1,0 +1,152 @@
+SUBROUTINE EMV_PRT_VIA_ATW( ON_R_OFF )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 11/29/2018 09:46:16 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Starts the process of capturing printer output to a  file  in
+!           the user's PC's home directory, presumably for later printing
+
+! Syntax  : CALL PRT_VIA_ATW( 1 ) ;! Starts capturing screen output
+!           PRINT
+!           CALL PRT_VIA_ATW( 0 ) ;! Ends and prints the captured output
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+   ! ESC STX p mode CR ... Selects the printer mode:
+   ! mode = 0 - turns off auto or transparent print
+   ! mode = 1 - turns on auto (copy) print mode
+   ! mode = 2 - turns on transparent print mode
+   ! mode = X - turns off auto or transparent print and closes the print job immediately
+
+!  CRT CHAR( 27 ) : CHAR( 2 ) : 'p2'
+!  CRT CHAR( 27 ) : CHAR( 2 ) : 'pX'
+
+   EQU IDENTITY TO 'EMV_PRT_VIA_ATW'
+
+   EQU STX TO CHAR(  2 )
+   EQU TAB TO CHAR(  9 )
+   EQU LF  TO CHAR( 10 )
+   EQU CR  TO CHAR( 13 )
+   EQU EM  TO CHAR( 25 )
+   EQU ESC TO CHAR( 27 )
+
+   ALLSWELL = @TRUE
+
+   IF ALLSWELL THEN GOSUB FETCH.CLI.PARAMETERS
+   IF ALLSWELL THEN GOSUB MOUNT.THE.FILE
+   IF ALLSWELL THEN GOSUB FETCH.WIN.HOME
+   IF ALLSWELL THEN GOSUB PRINT.THE.ITEMS
+
+STOP
+
+FETCH.CLI.PARAMETERS:
+
+   ITEM_LST  = CHANGE( TRIM( @SENTENCE ), ' ', @AM )
+
+   IF ITEM_LST< 1 > EQ 'RUN' THEN
+
+      DEL ITEM_LST< 1 >
+      DEL ITEM_LST< 1 >
+
+   END
+
+   DEL ITEM_LST< 1 >
+
+   FILENAME  = ITEM_LST< 1 >
+
+   DEL ITEM_LST< 1 >
+
+   ALLSWELL  = FILENAME NE ''
+
+RETURN
+
+MOUNT.THE.FILE:
+
+   CRT 'Checking the file...'
+
+   OPEN FILENAME TO THE_FILE ELSE
+
+      CRT FILENAME : '` could not be opened!'
+
+      ALLSWELL  = @FALSE
+
+   END
+
+RETURN
+
+FETCH.WIN.HOME:
+
+   VBA_CODE  =  'Pdim s as accutermclasses.session'
+   VBA_CODE := '`set s=activesession'
+   VBA_CODE := '`accuterm.activate'
+   VBA_CODE := '`s.output cstr(Environ("USERPROFILE"))&vbCr'
+
+   EXECUTE 'PTERM CASE NOINVERT'
+
+   PROMPT ''
+
+   CRT ESC : STX : CHANGE( VBA_CODE, '`', EM )
+
+   ECHO OFF
+
+   INPUT PATHNAME :
+
+   ECHO ON
+
+   EXECUTE 'PTERM CASE INVERT'
+
+   ALLSWELL  = PATHNAME NE ''
+
+RETURN
+
+PRINT.THE.ITEMS:
+
+   ITEM_NUM  = DCOUNT( ITEM_LST, @AM )
+
+   FOR ITEM_NUM = 1 TO ITEM_MAX
+
+      ITEMNAME  = ITEM_LST< ITEM_NUM >
+
+      READ THE_ITEM FROM THE_FILE, ITEMNAME THEN
+
+         GOSUB PRINT.THE.ITEM
+
+      END ELSE
+
+         CRT 'Couldn`t find ' : FILENAME : ' ' : ITEMNAME : '!'
+
+      END
+
+   NEXT ITEM_NUM
+
+RETURN
+
+PRINT.THE.ITEM:
+
+   ITEMPATH  = PATHNAME : '\Documents\PRT_' : FILENAME : '_' : ITEMNAME : '.txt'
+
+   ! Start AccuTerm's screen-capture to the user's home directory.
+
+   CRT ESC : STX : 'CO;' : ITEMPATH
+
+   ! Append the heading rows to the .xls file.
+
+   CRT '"0"'                 : TAB : '"' : CHANGE( HEAD_TBL< 1 >, @VM, '"' : TAB : '"' ) : '"'
+   CRT '"' : FILENAME : '"'  : TAB : '"' : CHANGE( HEAD_TBL< 2 >, @VM, '"' : TAB : '"' ) : '"'
+
+   ! Close AccuTerm's screen-capture file.
+
+   CRT ESC : STX : 'CX'
+
+   ! Open it in Excel
+
+   CRT ESC : STX : '<"C:\Program Files (x86)\Microsoft Office\root\Office16\EXCEL.EXE" "' : ITEMPATH : '"'
+
+RETURN

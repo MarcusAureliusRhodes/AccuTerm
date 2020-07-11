@@ -1,0 +1,28 @@
+PROGRAM EMV_DLG_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:18 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_DLG_ATW
+
+   EQU IDENTITY TO 'EMV_DLG_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+DEBUG
+   PARA_TBL = CHANGE( 'FILE}BASIC}CATALOG}RUN}REPEAT|0}1}1}0}0', '|', @AM )
+   DLG_NAME = 'EMV_DLG_ATW_TST'
+   FILENAME = 'EMV,VBA'
+
+   CALL EMV_DLG_ATW( FILENAME, DLG_NAME, PARA_TBL )
+
+   CRT
+   CRT 'PARA_TBL = "' : PARA_TBL : '"'
+
+STOP

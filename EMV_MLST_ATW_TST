@@ -1,0 +1,63 @@
+PROGRAM EMV_MLST_ATW_TST
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/26/2014 15:48:48 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Test-drives EMV_MLST_ATW.
+
+   EQU IDENTITY TO 'EMV_MLST_ATW_TST'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF ;! Let's keep these elemental.
+
+   EQU LF TO CHAR( 10 )
+   EQU CR TO CHAR( 13 )
+
+   PROMPT ''
+
+   DLOG_TTL = 'Ctrl+Click as many as you like'
+   LST_HEAD = 'EMV,DEV'
+   FULL_LST = ''
+
+!  OPEN 'EMV,DEV' TO EMV_DEVS ELSE
+   OPEN 'MR.BP' TO EMV_DEVS ELSE
+
+      STOP
+
+   END
+
+   SELECT EMV_DEVS
+
+   LOOP
+
+      READNEXT ITEMNAME THEN
+
+         LOCATE ITEMNAME IN FULL_LST BY 'AL' SETTING NEW_ATTR ELSE
+
+         FULL_LST = INSERT( FULL_LST, NEW_ATTR; ITEMNAME )
+
+         END
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   MARK_LST      = FULL_LST< 2 >
+   MARK_LST< 2 > = FULL_LST< 4 >
+   MARK_LST< 3 > = FULL_LST< 6 >
+
+   CALL EMV_MLST_ATW( PART_LST, FULL_LST, DLOG_TTL, LST_HEAD, MARK_LST )
+
+   CALL EMV_ALERT_BOX_ATW( 'You selected...' : @AM : PART_LST )
+
+STOP

@@ -1,0 +1,55 @@
+SUBROUTINE EMV_GET_USR_INPUT_ATW( RESPONSE, PROMPTER, HEADLINE )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:14 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Offers the user a Windows input field.
+
+! Var_Name IO Typ Description____________________________________________
+! RESPONSE >< Str Offer a suggestion; Get a response.
+! HEADLINE >  Str Window title
+! PROMPTER >  Str Prompt, instructions, etc.
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: N/A
+
+! Catalog : EMV_GET_USR_INPUT_ATW
+
+! New name: N/A
+
+   IF ASSIGNED( RESPONSE ) ELSE RESPONSE = ''
+   IF ASSIGNED( HEADLINE ) ELSE HEADLINE = ''
+   IF ASSIGNED( PROMPTER ) ELSE PROMPTER = ''
+
+   IF LEN( HEADLINE ) ELSE HEADLINE = '?!? No heading ?!?'
+   IF LEN( PROMPTER ) ELSE PROMPTER = '?!? No prompt ?!?'
+
+   CALL EMV_VBA_STR_FMT_ATW( TEMP_INP, RESPONSE )
+   CALL EMV_VBA_STR_FMT_ATW( HEAD_TXT, HEADLINE )
+   CALL EMV_VBA_STR_FMT_ATW( PRMT_TXT, PROMPTER )
+
+   VBA_CODE  = CHAR( 27 ) : CHAR( 2 ) : 'P '
+   VBA_CODE := '`dim s as accutermclasses.session'
+   VBA_CODE := '`set s = activesession'
+   VBA_CODE := '`a$ = ' : TEMP_INP
+   VBA_CODE := '`a$ = InputBox$(' : PRMT_TXT : ',' : HEAD_TXT : ',(a$))'
+!  VBA_CODE := '`debug.print a$'
+   VBA_CODE := '`s.Output a$&vbCr'
+
+   ECHO OFF
+
+   CRT CHANGE( VBA_CODE, '`', CHAR( 25 ) ) : CHAR( 13 ) :
+
+   INPUT RESPONSE :
+
+   ECHO ON
+
+RETURN ;! to the calling program.

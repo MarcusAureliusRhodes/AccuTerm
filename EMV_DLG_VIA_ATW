@@ -1,0 +1,93 @@
+SUBROUTINE EMV_DLG_ATW( FILENAME, DLG_NAME, SETTINGS )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 04/27/2017 16:47:28 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: This is an early attempt at a universal  AccuTerm  VBA  script
+!           delivery mechanism.  The idea is to create a single subroutine
+!           that can read, prepare, present, and return the input from any
+!           dialog box stored in EMV,VBA.
+
+! Syntax  :
+
+! Examples:
+
+! Upcoming:
+
+! Old name:
+
+   EQU IDENTITY TO 'EMV_DLG_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   EQU STX TO CHAR(  2 )
+   EQU LF  TO CHAR( 10 )
+   EQU CR  TO CHAR( 13 )
+   EQU EM  TO CHAR( 25 )
+   EQU ESC TO CHAR( 27 )
+
+   PROMPT ''
+
+   OPEN FILENAME TO EMV_VBAS ELSE
+   END
+
+   READ VBA_CODE FROM EMV_VBAS, DLG_NAME ELSE
+
+      VBA_CODE       = 'Dim Options As String'
+      VBA_CODE< -1 > = 'Dim S As Session'
+      VBA_CODE< -1 > = 'Set S = ActiveSession'
+      VBA_CODE< -1 > = 'Begin Dialog UserDialog -1,-1,400,80,"*** ERROR! ***"'
+      VBA_CODE< -1 > =    'Text 10,10,380,60,"The item named, ' : DLG_NAME : ', could not be found in the file named, ' : FILENAME : '!"'
+      VBA_CODE< -1 > =    'OKButton 170,50,60,020'
+      VBA_CODE< -1 > = 'End Dialog'
+      VBA_CODE< -1 > = 'Dim PCEdMenu As UserDialog'
+      VBA_CODE< -1 > = 'rc% = Dialog( PCEdMenu, -1 )'
+      VBA_CODE< -1 > = 'S.Output vbCr'
+
+   END
+
+   VBA_CODE = CHANGE( VBA_CODE,  CR :  LF, @AM )
+   VBA_CODE = CHANGE( VBA_CODE, @AM :  CR, @AM )
+   VBA_CODE = CHANGE( VBA_CODE,  CR : @AM, @AM )
+   VBA_CODE = CHANGE( VBA_CODE, @AM :  LF, @AM )
+   VBA_CODE = CHANGE( VBA_CODE,  CR : @AM, @AM )
+
+   LINE_MIN = DCOUNT( VBA_CODE[ 1, INDEX( VBA_CODE, '@', 1 ) ], @AM )
+   LINE_MAX = DCOUNT( VBA_CODE[ 1, INDEX( VBA_CODE, '@', COUNT( VBA_CODE, '@' ) ) ], @AM )
+
+   FOR LINE_NUM = LINE_MIN TO LINE_MAX
+
+      THE_LINE = VBA_CODE< LINE_NUM >
+
+      LOOP WHILE INDEX( THE_LINE, '@', 2 ) DO
+
+         LBL_TEXT = FIELD( THE_LINE, '@', 2 )
+
+         LOCATE LBL_TEXT IN SETTINGS< 1 > SETTING VALU_NUM THEN
+
+         THE_LINE = CHANGE( THE_LINE, '@' : LBL_TEXT : '@', SETTINGS< 2, VALU_NUM > )
+
+         END
+
+      REPEAT
+
+      VBA_CODE< LINE_NUM > = THE_LINE
+
+   NEXT LINE_NUM
+
+   CRT ESC : STX : 'P' : CHANGE( TRIM( VBA_CODE ), @AM, EM ) : CR :
+
+   ECHO OFF
+
+   INPUT SETTINGS :
+
+   ECHO ON
+
+RETURN

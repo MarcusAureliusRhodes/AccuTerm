@@ -1,0 +1,190 @@
+SUBROUTINE EMV_LST_BOX_ATW( DLOG_HDR, LIST_HDR, NAME_LST, DLOG_WID, DLOG_HGT, FONT_WID, SLCT_NUM )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 09/05/2014 20:11:43 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: This subroutine builds and executes a  script  which  displays
+!           the list in a  dialog  box  and  returns  the  number  of  the
+!           selected item back to the host.
+
+!           Call this subroutine to  display  a  list  of  items  using  a
+!           windows dialog box, returning the selected item,  or  zero  if
+!           the user clicked the Cancel button.
+
+! Var_Name IO Typ Function________________________________________________
+! DLOG_HDR  < STR dialog box title
+! LIST_HDR  < STR prompt text displayed above the list box
+! NAME_LST  < 1DA list contents (items separated by specified delimiter
+! DLOG_WID >  NUM dialog width in characters (approx)
+! DLOG_HGT >  NUM dialog height in lines (approx)
+! FONT_WID  < 0 = proportional font
+!             1 = list displayed using fixed pitch font
+!             2 = list and prompt text displayed using fixed pitch font
+! SLCT_NUM >< NUM on entry, index of initial selection, or zero if no item
+!                 is initially selected; on return, index of selection, or
+!                 zero if the user clicked the Cancel button.
+
+   EQU IDENTITY TO 'EMV_LST_BOX_ATW'
+
+   EQU STX      TO CHAR(  2 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   PROMPT ''
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF
+
+   ! Check our parameters
+
+   IF ASSIGNED( DLOG_HDR ) ELSE DLOG_HDR = 'No title?!'
+   IF ASSIGNED( LIST_HDR ) ELSE LIST_HDR = 'No heading?!'
+   IF ASSIGNED( NAME_LST ) ELSE NAME_LST = 'No list?!'
+   IF ASSIGNED( SLCT_NUM ) ELSE SLCT_NUM = 0
+   IF ASSIGNED( FONT_WID ) ELSE FONT_WID = 0
+   IF ASSIGNED( DLOG_HGT ) ELSE DLOG_HGT = 10
+
+   LIST_LEN = DCOUNT( NAME_LST, @AM )
+
+   IF ASSIGNED( DLOG_WID ) ELSE
+
+      DLOG_WID = 0
+
+      FOR LINE_NUM = 1 TO LIST_LEN
+
+         IF LEN( NAME_LST< LINE_NUM > ) GT DLOG_WID THEN
+
+            DLOG_WID = LEN( NAME_LST< LINE_NUM > )
+
+         END
+
+      NEXT LINE_NUM
+
+   END
+
+   ! Calculate dialog box size in 'dialog units'
+
+   BOX_WDTH = DLOG_WID * 9
+   BOX_HGHT = DLOG_HGT * 12
+
+   IF BOX_HGHT LT  100 THEN BOX_HGHT =  100
+   IF BOX_HGHT GT  600 THEN BOX_HGHT =  600
+   IF BOX_WDTH LT  250 THEN BOX_WDTH =  250
+   IF BOX_WDTH GT 1500 THEN BOX_WDTH = 1500
+   IF LIST_LEN LT    1 THEN LIST_LEN =    1
+
+   CY = BOX_HGHT + 60
+   CX = BOX_WDTH + 20
+   DX = INT( ( CX - 120 ) / 3 )
+   DY = CY - 25
+
+   ! Build script to display list using dialog box
+
+   VBA_CODE  =      'Dim Listarray(' : ( LIST_LEN - 1 ) : ') As String'
+   VBA_CODE< -1 > = 'Dim n%'
+
+   ! Load Listarray
+
+   VBA_CODE< -1 > = 'On Error Resume Next'
+
+   FOR NAME_NUM = 1 TO LIST_LEN
+
+      VBA_CODE< -1 > = 'Listarray(' : ( NAME_NUM - 1 ) : ') = "' : CHANGE( NAME_LST< NAME_NUM >, '"', '' ) : '"'
+
+   NEXT NAME_NUM
+
+   ! Define dialog box
+
+   VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : CX : ',' : CY : ',"' : DLOG_HDR : '",.DialogFunc'
+   VBA_CODE< -1 > = 'Text 10,10,' : BOX_WDTH : ',12,"' : LIST_HDR : '",.Heading'
+   VBA_CODE< -1 > = 'ListBox 10,27,' : BOX_WDTH : ',' : BOX_HGHT : ',Listarray(),.Listbox'
+   VBA_CODE< -1 > = 'OKButton ' : DX : ',' : DY : ',60,20'
+   VBA_CODE< -1 > = 'CancelButton ' : ( 2 * DX ) + 60 : ',' : DY : ',60,20'
+   VBA_CODE< -1 > = 'End Dialog'
+   VBA_CODE< -1 > = 'Dim Dlg As UserDialog'
+
+   ! Set the initial selection
+
+   VBA_CODE< -1 > = 'Dlg.Listbox = ' : ( SLCT_NUM - 1 )
+
+   ! Display the dialog box
+
+   VBA_CODE< -1 > = 'Dialog Dlg'
+
+   ! Transmit results to host
+
+   VBA_CODE< -1 > = 'InitSession.Activate'
+   VBA_CODE< -1 > = 'If Err = 0 Then n% = Dlg.Listbox + 1 Else n% = 0'
+   VBA_CODE< -1 > = 'InitSession.Output CStr(n%)&vbCr'
+
+   ! Define dialog function to move focus & select fixed pitch font
+
+   VBA_CODE< -1 > = 'End Sub'
+
+   IF FONT_WID THEN
+
+      ! Declare API functions in "global" area, between End Sub and Sub
+
+      VBA_CODE< -1 > = 'Private Declare Function GetStockObject& Lib "gdi32" (ByVal nid&)'
+      VBA_CODE< -1 > = 'Private Declare Function SendDlgItemMessageA& Lib "user32" (ByVal hWnd&, ByVal ID&, ByVal uMsg&, ByVal wp&, ByVal lp&)'
+      VBA_CODE< -1 > = 'Private Const WM_SETFONT=&H30'
+      VBA_CODE< -1 > = 'Private Const SYSTEM_FIXED_FONT=16'
+
+   END
+
+   VBA_CODE< -1 > = 'Private Function DialogFunc(DlgItm$, Action%, SuppVal&) As Boolean'
+   VBA_CODE< -1 > = 'Select Case Action%'
+
+   IF FONT_WID THEN
+
+      ! Set the NAME_LST font to SYSTEM_FIXED_FONT
+
+      VBA_CODE< -1 > = 'Case 1'
+      VBA_CODE< -1 > = 'SendDlgItemMessageA SuppVal&,DlgControlID("Listbox"),WM_SETFONT,GetStockObject(SYSTEM_FIXED_FONT),1'
+
+   END
+
+   IF FONT_WID EQ 2 THEN
+
+      VBA_CODE< -1 > = 'SendDlgItemMessageA SuppVal&,DlgControlID("Heading"),WM_SETFONT,GetStockObject(SYSTEM_FIXED_FONT),1'
+
+   END
+
+   ! Move focus to the listbox
+
+   VBA_CODE< -1 > = 'Case 5'
+   VBA_CODE< -1 > = 'DlgFocus "Listbox"'
+   VBA_CODE< -1 > = 'End Select'
+   VBA_CODE< -1 > = 'End Function'
+
+   ! Since host scripts get automatic End Sub, need a dummy Begin Sub
+
+   VBA_CODE< -1 > = 'Sub Dummy'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT SLCT_NUM :
+
+!  IF ECHO_STATE THEN
+
+      ECHO ON
+
+!  END
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN ;! to the calling program.

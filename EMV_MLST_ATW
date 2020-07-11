@@ -1,0 +1,117 @@
+SUBROUTINE EMV_MLST_ATW( PART_LST, FULL_LST, DLOG_TTL, LIST_TTL, MARK_LST )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 08/16/2014 21:50:44 by marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Presents a reasonably  standard-looking,  Windows  multi-item
+!           selector-box.
+
+! PART_LST  < 1DA items chosen
+! FULL_LST >  1DA items to choose from
+! DLOG_TTL >  STR window heading
+! LIST_TTL >  STR list heading
+! MARK_LST >  1DA initial choices
+
+   EQU IDENTITY TO 'EMV_MLST_ATW'
+
+!  INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF ;! Let's keep these elemental.
+
+   EQU STX      TO CHAR(  2 )
+   EQU EM       TO CHAR( 25 )
+   EQU ESC      TO CHAR( 27 )
+
+   IF ASSIGNED( MARK_LST ) ELSE
+
+      MARK_LST = ''
+
+   END
+
+   PREP_LST = ''
+   PREP_MAX = DCOUNT( MARK_LST, @AM )
+
+   FOR PREP_NUM = 1 TO PREP_MAX
+
+      ITEMNAME = MARK_LST< PREP_NUM >
+
+      LOCATE ITEMNAME IN FULL_LST SETTING ITS_ATTR THEN
+
+         PREP_LST< -1 > = ITS_ATTR - 1
+
+      END
+
+   NEXT PREP_NUM
+
+   PREP_LST = CHANGE( PREP_LST, @AM, ',' )
+   ITEM_MAX = DCOUNT( FULL_LST, @AM )
+   BOX_WDTH = 100
+   BOX_HGHT = ITEM_MAX * 20
+
+   IF BOX_HGHT GT 300 THEN
+
+      BOX_HGHT = 300
+
+   END
+
+   VBA_CODE  =      'Dim S As Session'
+   VBA_CODE< -1 > = 'Set S=ActiveSession'
+   VBA_CODE< -1 > = 'Dim lists$(' : ITEM_MAX : ')'
+
+   FOR ITEM_NUM = 1 TO ITEM_MAX
+
+      THE_ITEM   = FULL_LST< ITEM_NUM >
+      TMP_WDTH   = LEN( THE_ITEM ) * 10
+
+      VBA_CODE< -1 > = 'lists$(' : ITEM_NUM : ')="' : THE_ITEM : '"'
+
+      IF TMP_WDTH GT BOX_WDTH AND TMP_WDTH LT 600 THEN
+
+         BOX_WDTH = TMP_WDTH
+
+      END
+
+   NEXT ITEM_NUM
+
+   VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : ( BOX_WDTH + 20 ) : ',' : ( BOX_HGHT + 60 ) : ',"' : DLOG_TTL : '"'
+   VBA_CODE< -1 > =    'Text 10,8,' : BOX_WDTH : ',15,"' : LIST_TTL : '"'
+   VBA_CODE< -1 > =    'MultiListBox 10,25,' : BOX_WDTH : ',' : BOX_HGHT : ',lists$(),.list'
+   VBA_CODE< -1 > =    'CancelButton 10,' : ( BOX_HGHT + 30 ) : ',' : INT( BOX_WDTH / 2 - 10 ) : ',20'
+   VBA_CODE< -1 > =    'OKButton ' : INT( BOX_WDTH / 2 + 20 ) : ',' : ( BOX_HGHT + 30 ) : ',' : INT( BOX_WDTH / 2 - 10 ) : ',20'
+   VBA_CODE< -1 > = 'End Dialog'
+   VBA_CODE< -1 > = 'Dim dlg As UserDialog'
+   VBA_CODE< -1 > = 'dlg.list=Array(' : PREP_LST : ')'
+   VBA_CODE< -1 > = 'd=Dialog(dlg,-1)'
+   VBA_CODE< -1 > = 'l$=""'
+   VBA_CODE< -1 > = 'If d=-1 then'
+!  VBA_CODE< -1 > =    'b$=Chr$(174)'
+   VBA_CODE< -1 > =    'a=LBound(dlg.list)'
+   VBA_CODE< -1 > =    'z=UBound(dlg.list)'
+   VBA_CODE< -1 > =    'For i = a To z'
+   VBA_CODE< -1 > =       'l$=l$&CStr(dlg.list(i))&"|"'
+   VBA_CODE< -1 > =    'Next i'
+   VBA_CODE< -1 > = 'End If'
+   VBA_CODE< -1 > = 'S.Output l$&vbCr'
+
+   CALL EMV_CURSOR_CAPTURE
+
+   ! Execute script
+
+   CRT @( 0, 0 ) : ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM )
+
+   ! Retrieve the result
+
+   ECHO OFF
+
+   INPUT PART_LST :
+
+   ECHO ON
+
+   CALL EMV_CURSOR_RESTORE
+
+RETURN ;! to the calling program.

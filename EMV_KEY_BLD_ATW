@@ -1,0 +1,378 @@
+PROGRAM EMV_KEY_BLD_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 03/22/2020 20:48:00 by Marcus
+
+! Platform: Any Pick; Any OS; Any Emulator; Any Emulation
+
+! Function: Generates the [Keyboard] section of an AccuTerm .atcf file in
+!           EMV,XFR ATW_KEYS.atcf
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+! Old name: N/A
+
+! New name: N/A
+
+! Catalog : EMV_KEY_BLD_ATW
+
+   INCLUDE EMV_KEY_EQU
+
+   ATW_KEYS       = '[Keyboard]'
+   ATW_KEYS< -1 > =    '8=' : @VM : K_BACKSPACE
+   ATW_KEYS< -1 > =    '9=' : @VM : K_TAB
+   ATW_KEYS< -1 > =   '13=' : @VM : K_ENTER
+   ATW_KEYS< -1 > =   '27=' : @VM : K_ESCAPE
+!  ATW_KEYS< -1 > =   '32=' : @VM : K_SPACE
+   ATW_KEYS< -1 > =   '33=' : @VM : K_PAGE_UP
+   ATW_KEYS< -1 > =   '34=' : @VM : K_PAGE_DOWN
+   ATW_KEYS< -1 > =   '35=' : @VM : K_END
+   ATW_KEYS< -1 > =   '36=' : @VM : K_HOME
+   ATW_KEYS< -1 > =   '37=' : @VM : K_LEFT
+   ATW_KEYS< -1 > =   '38=' : @VM : K_UP
+   ATW_KEYS< -1 > =   '39=' : @VM : K_RIGHT
+   ATW_KEYS< -1 > =   '40=' : @VM : K_DOWN
+   ATW_KEYS< -1 > =   '45=' : @VM : K_INSERT
+   ATW_KEYS< -1 > =   '46=' : @VM : K_DELETE
+!  ATW_KEYS< -1 > =   '48=' : @VM : K_0
+!  ATW_KEYS< -1 > =   '49=' : @VM : K_1
+!  ATW_KEYS< -1 > =   '50=' : @VM : K_2
+!  ATW_KEYS< -1 > =   '51=' : @VM : K_3
+!  ATW_KEYS< -1 > =   '52=' : @VM : K_4
+!  ATW_KEYS< -1 > =   '53=' : @VM : K_5
+!  ATW_KEYS< -1 > =   '54=' : @VM : K_6
+!  ATW_KEYS< -1 > =   '55=' : @VM : K_7
+!  ATW_KEYS< -1 > =   '56=' : @VM : K_8
+!  ATW_KEYS< -1 > =   '57=' : @VM : K_9
+!  ATW_KEYS< -1 > =   '96=' : @VM : KP_0
+!  ATW_KEYS< -1 > =   '97=' : @VM : KP_1
+!  ATW_KEYS< -1 > =   '98=' : @VM : KP_2
+!  ATW_KEYS< -1 > =   '99=' : @VM : KP_3
+!  ATW_KEYS< -1 > =  '100=' : @VM : KP_4
+!  ATW_KEYS< -1 > =  '101=' : @VM : KP_5
+!  ATW_KEYS< -1 > =  '102=' : @VM : KP_6
+!  ATW_KEYS< -1 > =  '103=' : @VM : KP_7
+!  ATW_KEYS< -1 > =  '104=' : @VM : KP_8
+!  ATW_KEYS< -1 > =  '105=' : @VM : KP_9
+!  ATW_KEYS< -1 > =  '106=' : @VM : KP_STAR
+!  ATW_KEYS< -1 > =  '107=' : @VM : KP_PLUS
+!  ATW_KEYS< -1 > =  '109=' : @VM : KP_DASH
+!  ATW_KEYS< -1 > =  '110=' : @VM : KP_DOT
+!  ATW_KEYS< -1 > =  '111=' : @VM : KP_SLASH
+   ATW_KEYS< -1 > =  '112=' : @VM : K_F01
+   ATW_KEYS< -1 > =  '113=' : @VM : K_F02
+   ATW_KEYS< -1 > =  '114=' : @VM : K_F03
+   ATW_KEYS< -1 > =  '115=' : @VM : K_F04
+   ATW_KEYS< -1 > =  '116=' : @VM : K_F05
+   ATW_KEYS< -1 > =  '117=' : @VM : K_F06
+   ATW_KEYS< -1 > =  '118=' : @VM : K_F07
+   ATW_KEYS< -1 > =  '119=' : @VM : K_F08
+   ATW_KEYS< -1 > =  '120=' : @VM : K_F09
+   ATW_KEYS< -1 > =  '121=' : @VM : K_F10
+   ATW_KEYS< -1 > =  '122=' : @VM : K_F11
+   ATW_KEYS< -1 > =  '123=' : @VM : K_F12
+!  ATW_KEYS< -1 > =  '192=' : @VM : K_BACKTICK
+!  ATW_KEYS< -1 > =  '219=' : @VM : K_LBRACKET
+!  ATW_KEYS< -1 > =  '221=' : @VM : K_RBRACKET
+   ATW_KEYS< -1 > =  '253=' : @VM : KP_ENTER
+   ATW_KEYS< -1 > = '1008=' : @VM : KS_BACKSPACE
+   ATW_KEYS< -1 > = '1009=' : @VM : KS_TAB
+   ATW_KEYS< -1 > = '1013=' : @VM : KS_ENTER
+   ATW_KEYS< -1 > = '1027=' : @VM : KS_ESCAPE
+   ATW_KEYS< -1 > = '1032=' : @VM : KS_SPACE
+   ATW_KEYS< -1 > = '1033=' : @VM : KS_PAGE_UP
+   ATW_KEYS< -1 > = '1034=' : @VM : KS_PAGE_DOWN
+   ATW_KEYS< -1 > = '1036=' : @VM : KS_HOME
+   ATW_KEYS< -1 > = '1037=' : @VM : KS_LEFT
+   ATW_KEYS< -1 > = '1038=' : @VM : KS_UP
+   ATW_KEYS< -1 > = '1039=' : @VM : KS_RIGHT
+   ATW_KEYS< -1 > = '1040=' : @VM : KS_DOWN
+   ATW_KEYS< -1 > = '1045=' : @VM : KS_INSERT
+   ATW_KEYS< -1 > = '1046=' : @VM : KS_DELETE
+   ATW_KEYS< -1 > = '1096=' : @VM : KPS_0
+   ATW_KEYS< -1 > = '1097=' : @VM : KPS_1
+   ATW_KEYS< -1 > = '1098=' : @VM : KPS_2
+   ATW_KEYS< -1 > = '1099=' : @VM : KPS_3
+   ATW_KEYS< -1 > = '1100=' : @VM : KPS_4
+   ATW_KEYS< -1 > = '1101=' : @VM : KPS_5
+   ATW_KEYS< -1 > = '1102=' : @VM : KPS_6
+   ATW_KEYS< -1 > = '1103=' : @VM : KPS_7
+   ATW_KEYS< -1 > = '1104=' : @VM : KPS_8
+   ATW_KEYS< -1 > = '1105=' : @VM : KPS_9
+   ATW_KEYS< -1 > = '1106=' : @VM : KPS_STAR
+   ATW_KEYS< -1 > = '1107=' : @VM : KPS_PLUS
+   ATW_KEYS< -1 > = '1109=' : @VM : KPS_DASH
+!  ATW_KEYS< -1 > = '1110=' : @VM : KPS_DOT
+!  ATW_KEYS< -1 > = '1111=' : @VM : KPS_SLASH
+   ATW_KEYS< -1 > = '1112=' : @VM : KS_F01
+   ATW_KEYS< -1 > = '1113=' : @VM : KS_F02
+   ATW_KEYS< -1 > = '1114=' : @VM : KS_F03
+   ATW_KEYS< -1 > = '1115=' : @VM : KS_F04
+   ATW_KEYS< -1 > = '1116=' : @VM : KS_F05
+   ATW_KEYS< -1 > = '1117=' : @VM : KS_F06
+   ATW_KEYS< -1 > = '1118=' : @VM : KS_F07
+   ATW_KEYS< -1 > = '1119=' : @VM : KS_F08
+   ATW_KEYS< -1 > = '1120=' : @VM : KS_F09
+   ATW_KEYS< -1 > = '1121=' : @VM : KS_F10
+   ATW_KEYS< -1 > = '1122=' : @VM : KS_F11
+   ATW_KEYS< -1 > = '1123=' : @VM : KS_F12
+   ATW_KEYS< -1 > = '1253=' : @VM : KPS_ENTER
+   ATW_KEYS< -1 > = '2008=' : @VM : KC_BACKSPACE
+   ATW_KEYS< -1 > = '2009=' : @VM : KC_TAB
+   ATW_KEYS< -1 > = '2013=' : @VM : KC_ENTER
+   ATW_KEYS< -1 > = '2027=' : @VM : K_ESCAPE
+   ATW_KEYS< -1 > = '2032=' : @VM : KC_SPACE
+   ATW_KEYS< -1 > = '2033=' : @VM : KC_PAGE_UP
+   ATW_KEYS< -1 > = '2034=' : @VM : KC_PAGE_DOWN
+   ATW_KEYS< -1 > = '2035=' : @VM : KC_END
+   ATW_KEYS< -1 > = '2036=' : @VM : KC_HOME
+   ATW_KEYS< -1 > = '2037=' : @VM : KC_LEFT
+   ATW_KEYS< -1 > = '2038=' : @VM : KC_UP
+   ATW_KEYS< -1 > = '2039=' : @VM : KC_RIGHT
+   ATW_KEYS< -1 > = '2040=' : @VM : KC_DOWN
+   ATW_KEYS< -1 > = '2045=' : @VM : KC_INSERT
+   ATW_KEYS< -1 > = '2046=' : @VM : KC_DELETE
+   ATW_KEYS< -1 > = '2065=' : @VM : KC_A
+   ATW_KEYS< -1 > = '2066=' : @VM : KC_B
+   ATW_KEYS< -1 > = '2068=' : @VM : KC_D
+   ATW_KEYS< -1 > = '2069=' : @VM : KC_E
+   ATW_KEYS< -1 > = '2072=' : @VM : KC_H
+   ATW_KEYS< -1 > = '2073=' : @VM : KC_I
+   ATW_KEYS< -1 > = '2074=' : @VM : KC_J
+   ATW_KEYS< -1 > = '2075=' : @VM : KC_K
+   ATW_KEYS< -1 > = '2077=' : @VM : KC_M
+   ATW_KEYS< -1 > = '2078=' : @VM : KC_N
+   ATW_KEYS< -1 > = '2079=' : @VM : KC_O
+   ATW_KEYS< -1 > = '2081=' : @VM : KC_Q
+   ATW_KEYS< -1 > = '2083=' : @VM : KC_S
+   ATW_KEYS< -1 > = '2084=' : @VM : KC_T
+   ATW_KEYS< -1 > = '2085=' : @VM : KC_U
+   ATW_KEYS< -1 > = '2086=' : @VM : KC_V
+   ATW_KEYS< -1 > = '2087=' : @VM : KC_W
+   ATW_KEYS< -1 > = '2088=' : @VM : KC_X
+   ATW_KEYS< -1 > = '2090=' : @VM : KC_Z
+   ATW_KEYS< -1 > = '2096=' : @VM : KPC_0
+   ATW_KEYS< -1 > = '2097=' : @VM : KPC_1
+   ATW_KEYS< -1 > = '2098=' : @VM : KPC_2
+   ATW_KEYS< -1 > = '2099=' : @VM : KPC_3
+   ATW_KEYS< -1 > = '2100=' : @VM : KPC_4
+   ATW_KEYS< -1 > = '2101=' : @VM : KPC_5
+   ATW_KEYS< -1 > = '2102=' : @VM : KPC_6
+   ATW_KEYS< -1 > = '2103=' : @VM : KPC_7
+   ATW_KEYS< -1 > = '2104=' : @VM : KPC_8
+   ATW_KEYS< -1 > = '2105=' : @VM : KPC_9
+   ATW_KEYS< -1 > = '2106=' : @VM : KPC_STAR
+   ATW_KEYS< -1 > = '2107=' : @VM : KPC_PLUS
+   ATW_KEYS< -1 > = '2109=' : @VM : KPC_DASH
+!  ATW_KEYS< -1 > = '2110=' : @VM : KPC_DOT
+   ATW_KEYS< -1 > = '2111=' : @VM : KPC_SLASH
+   ATW_KEYS< -1 > = '2112=' : @VM : KC_F01
+   ATW_KEYS< -1 > = '2113=' : @VM : KC_F02
+   ATW_KEYS< -1 > = '2114=' : @VM : KC_F03
+   ATW_KEYS< -1 > = '2115=' : @VM : KC_F04
+   ATW_KEYS< -1 > = '2116=' : @VM : KC_F05
+   ATW_KEYS< -1 > = '2117=' : @VM : KC_F06
+   ATW_KEYS< -1 > = '2118=' : @VM : KC_F07
+   ATW_KEYS< -1 > = '2119=' : @VM : KC_F08
+   ATW_KEYS< -1 > = '2120=' : @VM : KC_F09
+   ATW_KEYS< -1 > = '2121=' : @VM : KC_F10
+   ATW_KEYS< -1 > = '2122=' : @VM : KC_F11
+   ATW_KEYS< -1 > = '2123=' : @VM : KC_F12
+   ATW_KEYS< -1 > = '2253=' : @VM : KPC_ENTER
+   ATW_KEYS< -1 > = '3008=' : @VM : KSC_BACKSPACE
+   ATW_KEYS< -1 > = '3013=' : @VM : KSC_ENTER
+   ATW_KEYS< -1 > = '3027=' : @VM : KSC_ESCAPE
+   ATW_KEYS< -1 > = '3032=' : @VM : KSC_SPACE
+   ATW_KEYS< -1 > = '3033=' : @VM : KSC_PAGE_UP
+   ATW_KEYS< -1 > = '3034=' : @VM : KSC_PAGE_DOWN
+   ATW_KEYS< -1 > = '3035=' : @VM : KSC_END
+   ATW_KEYS< -1 > = '3036=' : @VM : KSC_HOME
+   ATW_KEYS< -1 > = '3037=' : @VM : KSC_LEFT
+   ATW_KEYS< -1 > = '3038=' : @VM : KSC_UP
+   ATW_KEYS< -1 > = '3039=' : @VM : KSC_RIGHT
+   ATW_KEYS< -1 > = '3040=' : @VM : KSC_DOWN
+   ATW_KEYS< -1 > = '3045=' : @VM : KSC_INSERT
+   ATW_KEYS< -1 > = '3046=' : @VM : KSC_DELETE
+   ATW_KEYS< -1 > = '3112=' : @VM : KSC_F01
+   ATW_KEYS< -1 > = '3113=' : @VM : KSC_F02
+   ATW_KEYS< -1 > = '3114=' : @VM : KSC_F03
+   ATW_KEYS< -1 > = '3115=' : @VM : KSC_F04
+   ATW_KEYS< -1 > = '3116=' : @VM : KSC_F05
+   ATW_KEYS< -1 > = '3117=' : @VM : KSC_F06
+   ATW_KEYS< -1 > = '3118=' : @VM : KSC_F07
+   ATW_KEYS< -1 > = '3119=' : @VM : KSC_F08
+   ATW_KEYS< -1 > = '3120=' : @VM : KSC_F09
+   ATW_KEYS< -1 > = '3121=' : @VM : KSC_F10
+   ATW_KEYS< -1 > = '3122=' : @VM : KSC_F11
+   ATW_KEYS< -1 > = '3123=' : @VM : KSC_F12
+   ATW_KEYS< -1 > = '4008=' : @VM : KA_BACKSPACE
+   ATW_KEYS< -1 > = '4009=' : @VM : KA_TAB
+   ATW_KEYS< -1 > = '4013=' : @VM : KA_ENTER
+   ATW_KEYS< -1 > = '4027=' : @VM : KA_ESCAPE
+   ATW_KEYS< -1 > = '4032=' : @VM : KA_SPACE
+   ATW_KEYS< -1 > = '4033=' : @VM : KA_PAGE_UP
+   ATW_KEYS< -1 > = '4034=' : @VM : KA_PAGE_DOWN
+   ATW_KEYS< -1 > = '4035=' : @VM : KA_END
+   ATW_KEYS< -1 > = '4036=' : @VM : KA_HOME
+   ATW_KEYS< -1 > = '4037=' : @VM : KA_LEFT
+   ATW_KEYS< -1 > = '4038=' : @VM : KA_UP
+   ATW_KEYS< -1 > = '4039=' : @VM : KA_RIGHT
+   ATW_KEYS< -1 > = '4040=' : @VM : KA_DOWN
+   ATW_KEYS< -1 > = '4045=' : @VM : KA_INSERT
+   ATW_KEYS< -1 > = '4046=' : @VM : KA_DELETE
+   ATW_KEYS< -1 > = '4048=' : @VM : KA_0
+   ATW_KEYS< -1 > = '4049=' : @VM : KA_1
+   ATW_KEYS< -1 > = '4050=' : @VM : KA_2
+   ATW_KEYS< -1 > = '4051=' : @VM : KA_3
+   ATW_KEYS< -1 > = '4052=' : @VM : KA_4
+   ATW_KEYS< -1 > = '4053=' : @VM : KA_5
+   ATW_KEYS< -1 > = '4054=' : @VM : KA_6
+   ATW_KEYS< -1 > = '4055=' : @VM : KA_7
+   ATW_KEYS< -1 > = '4056=' : @VM : KA_8
+   ATW_KEYS< -1 > = '4057=' : @VM : KA_9
+   ATW_KEYS< -1 > = '4065=' : @VM : KA_A
+   ATW_KEYS< -1 > = '4066=' : @VM : KA_B
+   ATW_KEYS< -1 > = '4067=' : @VM : KA_C
+   ATW_KEYS< -1 > = '4068=' : @VM : KA_D
+   ATW_KEYS< -1 > = '4069=' : @VM : KA_E
+   ATW_KEYS< -1 > = '4070=' : @VM : KA_F
+   ATW_KEYS< -1 > = '4071=' : @VM : KA_G
+   ATW_KEYS< -1 > = '4072=' : @VM : KA_H
+   ATW_KEYS< -1 > = '4073=' : @VM : KA_I
+   ATW_KEYS< -1 > = '4074=' : @VM : KA_J
+   ATW_KEYS< -1 > = '4075=' : @VM : KA_K
+   ATW_KEYS< -1 > = '4076=' : @VM : KA_L
+   ATW_KEYS< -1 > = '4077=' : @VM : KA_M
+   ATW_KEYS< -1 > = '4078=' : @VM : KA_N
+   ATW_KEYS< -1 > = '4079=' : @VM : KA_O
+   ATW_KEYS< -1 > = '4080=' : @VM : KA_P
+   ATW_KEYS< -1 > = '4081=' : @VM : KA_Q
+   ATW_KEYS< -1 > = '4082=' : @VM : KA_R
+   ATW_KEYS< -1 > = '4083=' : @VM : KA_S
+   ATW_KEYS< -1 > = '4084=' : @VM : KA_T
+   ATW_KEYS< -1 > = '4085=' : @VM : KA_U
+   ATW_KEYS< -1 > = '4086=' : @VM : KA_V
+   ATW_KEYS< -1 > = '4087=' : @VM : KA_W
+   ATW_KEYS< -1 > = '4088=' : @VM : KA_X
+   ATW_KEYS< -1 > = '4089=' : @VM : KA_Y
+   ATW_KEYS< -1 > = '4090=' : @VM : KA_Z
+!  ATW_KEYS< -1 > = '4096=' : @VM : KPA_0
+!  ATW_KEYS< -1 > = '4097=' : @VM : KPA_1
+!  ATW_KEYS< -1 > = '4098=' : @VM : KPA_2
+!  ATW_KEYS< -1 > = '4099=' : @VM : KPA_3
+!  ATW_KEYS< -1 > = '4100=' : @VM : KPA_4
+!  ATW_KEYS< -1 > = '4101=' : @VM : KPA_5
+!  ATW_KEYS< -1 > = '4102=' : @VM : KPA_6
+!  ATW_KEYS< -1 > = '4103=' : @VM : KPA_7
+!  ATW_KEYS< -1 > = '4104=' : @VM : KPA_8
+!  ATW_KEYS< -1 > = '4105=' : @VM : KPA_9
+!  ATW_KEYS< -1 > = '4106=' : @VM : KPA_STAR
+!  ATW_KEYS< -1 > = '4107=' : @VM : KPA_PLUS
+!  ATW_KEYS< -1 > = '4109=' : @VM : KPA_DASH
+!  ATW_KEYS< -1 > = '4110=' : @VM : KPA_DOT
+!  ATW_KEYS< -1 > = '4111=' : @VM : KPA_SLASH
+   ATW_KEYS< -1 > = '4112=' : @VM : KA_F01
+   ATW_KEYS< -1 > = '4113=' : @VM : KA_F02
+   ATW_KEYS< -1 > = '4114=' : @VM : KA_F03
+   ATW_KEYS< -1 > = '4115=' : @VM : KA_F04
+   ATW_KEYS< -1 > = '4116=' : @VM : KA_F05
+   ATW_KEYS< -1 > = '4117=' : @VM : KA_F06
+   ATW_KEYS< -1 > = '4118=' : @VM : KA_F07
+   ATW_KEYS< -1 > = '4119=' : @VM : KA_F08
+   ATW_KEYS< -1 > = '4120=' : @VM : KA_F09
+   ATW_KEYS< -1 > = '4121=' : @VM : KA_F10
+   ATW_KEYS< -1 > = '4122=' : @VM : KA_F11
+   ATW_KEYS< -1 > = '4123=' : @VM : KA_F12
+   ATW_KEYS< -1 > = '4186=' : @VM : KA_SEMICOLON
+   ATW_KEYS< -1 > = '4187=' : @VM : KA_EQUAL
+   ATW_KEYS< -1 > = '4188=' : @VM : KA_COMMA
+   ATW_KEYS< -1 > = '4189=' : @VM : KA_DASH
+!  ATW_KEYS< -1 > = '4190=' : @VM : KA_DOT
+   ATW_KEYS< -1 > = '4191=' : @VM : KA_SLASH
+   ATW_KEYS< -1 > = '4192=' : @VM : KA_BACKTICK
+   ATW_KEYS< -1 > = '4219=' : @VM : KA_LBRACKET
+   ATW_KEYS< -1 > = '4220=' : @VM : KA_BACKSLASH
+   ATW_KEYS< -1 > = '4221=' : @VM : KA_RBRACKET
+!  ATW_KEYS< -1 > = '4222=' : @VM : KA_SINE
+   ATW_KEYS< -1 > = '4253=' : @VM : KPA_ENTER
+   ATW_KEYS< -1 > = '5008=' : @VM : KSA_BACKSPACE
+   ATW_KEYS< -1 > = '5009=' : @VM : KSA_TAB
+   ATW_KEYS< -1 > = '5013=' : @VM : KSA_ENTER
+   ATW_KEYS< -1 > = '5027=' : @VM : KSA_ESCAPE
+   ATW_KEYS< -1 > = '5032=' : @VM : KSA_SPACE
+   ATW_KEYS< -1 > = '5033=' : @VM : KSA_PAGE_UP
+   ATW_KEYS< -1 > = '5034=' : @VM : KSA_PAGE_DOWN
+   ATW_KEYS< -1 > = '5035=' : @VM : KSA_END
+   ATW_KEYS< -1 > = '5036=' : @VM : KSA_HOME
+   ATW_KEYS< -1 > = '5037=' : @VM : KSA_LEFT
+   ATW_KEYS< -1 > = '5038=' : @VM : KSA_UP
+   ATW_KEYS< -1 > = '5040=' : @VM : KSA_DOWN
+   ATW_KEYS< -1 > = '5045=' : @VM : KSA_INSERT
+   ATW_KEYS< -1 > = '5046=' : @VM : KSA_DELETE
+   ATW_KEYS< -1 > = '5112=' : @VM : KSA_F01
+   ATW_KEYS< -1 > = '5113=' : @VM : KSA_F02
+   ATW_KEYS< -1 > = '5114=' : @VM : KSA_F03
+   ATW_KEYS< -1 > = '5115=' : @VM : KSA_F04
+   ATW_KEYS< -1 > = '5116=' : @VM : KSA_F05
+   ATW_KEYS< -1 > = '5117=' : @VM : KSA_F06
+   ATW_KEYS< -1 > = '5118=' : @VM : KSA_F07
+   ATW_KEYS< -1 > = '5119=' : @VM : KSA_F08
+   ATW_KEYS< -1 > = '5120=' : @VM : KSA_F09
+   ATW_KEYS< -1 > = '5121=' : @VM : KSA_F10
+   ATW_KEYS< -1 > = '5122=' : @VM : KSA_F11
+   ATW_KEYS< -1 > = '5123=' : @VM : KSA_F12
+
+   KEYS_MAX  = DCOUNT( ATW_KEYS, @AM )
+
+   FOR KEYS_IDX = KEYS_MAX TO 2 STEP -1
+
+      NEW_CODE  = ATW_KEYS< KEYS_IDX, 2 >
+
+      LOCATE NEW_CODE IN NEW_KEYS SETTING ATTR_NUM THEN
+
+         KEY_CODE  = OLD_KEYS< ATTR_NUM >
+         CODE_LEN  = LEN( KEY_CODE )
+         ATW_CODE  = ''
+
+         FOR CODE_IDX = CODE_LEN TO 1 STEP -1
+
+            CHAR_NUM  = SEQ( KEY_CODE[ CODE_IDX, 1 ] )
+
+            BEGIN CASE
+
+               CASE CHAR_NUM LT  32 ; THE_CHAR = '^' : CHAR( CHAR_NUM + 64 ) ; CHAR_NUM += 1
+               CASE CHAR_NUM GT 126 ; THE_CHAR = '{' : CHAR_NUM 'R%3}'
+               CASE @TRUE           ; THE_CHAR = CHAR( CHAR_NUM )            ; CHAR_NUM += 4
+
+            END CASE
+
+            ATW_CODE  = THE_CHAR : ATW_CODE
+
+         NEXT CODE_IDX
+
+         ATW_KEYS< KEYS_IDX, 2 > = ATW_CODE
+
+      END ELSE
+
+!        CRT 'Unknown new-key `' : NEW_CODE : '`'
+
+         DEL ATW_KEYS< KEYS_IDX >
+
+      END
+
+   NEXT KEYS_IDX
+
+   OPEN 'EMV,XFR' TO THE_FILE THEN
+
+      WRITE CHANGE( ATW_KEYS, @VM, '' ) ON THE_FILE, 'ATW_KEYS.atcf'
+
+   END
+
+   CRT @( -1 ) : CHANGE( CHANGE( ATW_KEYS, @AM, CHAR( 13 ) : CHAR( 10 ) ), @VM, '' )
+
+STOP

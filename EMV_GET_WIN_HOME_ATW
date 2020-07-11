@@ -1,0 +1,290 @@
+! Beg Pick AP ======================= Generic Pick =======================
+
+SUBROUTINE EMV_GET_WIN_HOME_ATW( WIN_HOME )
+
+! End Pick AP ======================= Generic Pick =======================
+! Beg Pick D3 =================== Rocket Software's D3 ===================
+
+SUBROUTINE EMV_GET_WIN_HOME_ATW( WIN_HOME )
+
+! End Pick D3 =================== Rocket Software's D3 ===================
+! Beg Pick IC =================== InsterSytems' Cache ====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick IC =================== InsterSytems' Cache ====================
+! Beg Pick JB ====================== Zumasys' jBase ======================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick JB ====================== Zumasys' jBase ======================
+! Beg Pick NR =================== Northgate's Reality ====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick NR =================== Northgate's Reality ====================
+! Beg Pick ON ========== Onware Software Corporations's Onware ===========
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick ON ========== Onware Software Corporations's Onware ===========
+! Beg Pick QM =================== Ladybridge's OpenQM ====================
+
+FUNCTION EMV_GET_WIN_HOME_ATW( WHATEVER ) ;! Why has this suddenly become necessary?
+
+! End Pick QM =================== Ladybridge's OpenQM ====================
+! Beg Pick UD ================ Rocket Software's UniData =================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick UD ================ Rocket Software's UniData =================
+! Beg Pick UV ================ Rocket Software's UniVerse ================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick UV ================ Rocket Software's UniVerse ================
+! Beg Pick VU ================== ViaSystems' UniVision ===================
+
+FUNCTION EMV_GET_WIN_HOME_ATW()
+
+! End Pick VU ================== ViaSystems' UniVision ===================
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:16 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any Emulation
+
+! Function: Returns the Windows7 user's  full  home  path,  defaulting  to
+!           C:\Users\Public\Downloads\
+
+   EQU IDENTITY TO 'EMV_GET_WIN_HOME_ATW'
+
+   INCLUDE EMV_UBIQUITOUS_STUFF
+
+   ! Testing by marcus on ATW 2K2 5.2b sp2 (5.2.301) 07/03/2016 19:49
+
+   VBA_CODE       = 'InitSession.Output MyDocPath()&vbCr'
+   VBA_CODE< -1 > = 'End Sub'
+   VBA_CODE< -1 > = 'Private Declare Function SHGetFolderPath& Lib "shfolder.dll" Alias "SHGetFolderPathA" (ByVal hwnd&,ByVal fldr&,ByVal tok&,ByVal dw&,ByVal Path$)'
+   VBA_CODE< -1 > = 'Function MyDocPath() As String'
+   VBA_CODE< -1 > =    'Dim path As String'
+   VBA_CODE< -1 > =    'On Error Resume Next'
+   VBA_CODE< -1 > =    'path=String$(1000,0)'
+   VBA_CODE< -1 > =    'SHGetFolderPath 0,5,0,0,path'
+   VBA_CODE< -1 > =    'path=Left$(path,InStr(path,Chr$(0))-1)'
+   VBA_CODE< -1 > =    'If Len(path) Then'
+   VBA_CODE< -1 > =       'If Right$(path,1)<>"\" Then'
+   VBA_CODE< -1 > =         'path=path+"\"'
+   VBA_CODE< -1 > =       'End If'
+   VBA_CODE< -1 > =    'End If'
+   VBA_CODE< -1 > =    'MyDocPath=path'
+   VBA_CODE< -1 > = 'End Function'
+   VBA_CODE< -1 > = 'Sub Dummy'
+
+   CRT ESC : STX : 'P' : CHANGE( VBA_CODE, @AM, EM ) : CR :
+
+   ECHO OFF
+
+   ! Beg Pick AP ====================== Generic Pick =====================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick AP ====================== Generic Pick =====================
+   ! Beg Pick D3 ================= Rocket Software's D3 ==================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick D3 ================= Rocket Software's D3 ==================
+   ! Beg Pick IC ================== InsterSytems' Cache ==================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick IC ================== InsterSytems' Cache ==================
+   ! Beg Pick JB ==================== Zumasys' jBase =====================
+
+   INPUT WIN_HOME : FOR 3 ELSE
+
+      WIN_HOME = ''
+
+   END
+
+   ! End Pick JB ==================== Zumasys' jBase =====================
+   ! Beg Pick NR ================== Northgate's Reality ==================
+
+   WIN_HOME = ''
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick NR ================== Northgate's Reality ==================
+   ! Beg Pick ON ========= Onware Software Corporations's Onware =========
+   ! End Pick ON ========= Onware Software Corporations's Onware =========
+   ! Beg Pick QM ================== Ladybridge's OpenQM ==================
+
+!  WIN_HOME = ''
+
+!  LOOP
+
+!     IN CHR FOR 1 THEN
+
+!        WIN_HOME := CHAR( CHR )
+
+!     END ELSE
+
+!        EXIT
+
+!     END
+
+!  REPEAT
+
+   INPUT WIN_HOME :
+
+   ! End Pick QM ================== Ladybridge's OpenQM ==================
+   ! Beg Pick UD =============== Rocket Software's UniData ===============
+
+   WIN_HOME = ''
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick UD =============== Rocket Software's UniData ===============
+   ! Beg Pick UV ============== Rocket Software's UniVerse ===============
+
+   WIN_HOME = ''
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick UV ============== Rocket Software's UniVerse ===============
+   ! Beg Pick VU ================= ViaSystems' UniVision =================
+
+   WIN_HOME = ''
+
+   LOOP
+
+      INPUTIF TMP, 1 THEN
+
+         WIN_HOME := TMP
+
+      END ELSE
+
+         EXIT
+
+      END
+
+   REPEAT
+
+   ! End Pick VU ================= ViaSystems' UniVision =================
+
+   IF WIN_HOME EQ '' THEN
+
+      WIN_HOME = 'C:\Users\Public\Downloads\'
+
+   END
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+! Beg Pick AP ======================= Generic Pick =======================
+
+RETURN ;! to the calling program.
+
+! End Pick AP ======================= Generic Pick =======================
+! Beg Pick D3 =================== Rocket Software's D3 ===================
+
+RETURN ;! to the calling program.
+
+! End Pick D3 =================== Rocket Software's D3 ===================
+! Beg Pick IC =================== InsterSytems' Cache ====================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick IC =================== InsterSytems' Cache ====================
+! Beg Pick JB ====================== Zumasys' jBase ======================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick JB ====================== Zumasys' jBase ======================
+! Beg Pick NR =================== Northgate's Reality ====================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick NR =================== Northgate's Reality ====================
+! Beg Pick ON ========== Onware Software Corporations's Onware ===========
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick ON ========== Onware Software Corporations's Onware ===========
+! Beg Pick QM =================== Ladybridge's OpenQM ====================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick QM =================== Ladybridge's OpenQM ====================
+! Beg Pick UD ================ Rocket Software's UniData =================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick UD ================ Rocket Software's UniData =================
+! Beg Pick UV ================ Rocket Software's UniVerse ================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick UV ================ Rocket Software's UniVerse ================
+! Beg Pick VU ================== ViaSystems' UniVision ===================
+
+RETURN( WIN_HOME ) ;! to the calling program.
+
+! End Pick VU ================== ViaSystems' UniVision ===================

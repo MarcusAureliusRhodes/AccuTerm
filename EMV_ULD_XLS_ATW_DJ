@@ -1,0 +1,200 @@
+SUBROUTINE EMV_ULD_XLS_ATW_DJ
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:52 by Marcus
+
+! Platform: Any Pick; Any OS; Any emulator; Any emulation
+
+! Function:
+
+! djj   12-10-02   original code
+! djj   05-06-04   rewrite to be platform and samba-independent
+! djj   05-24-04   allow passing of source directory
+
+!                  this program reads in an excel file into two variables (associated)
+
+!                  sheets : sheet name @am sheet name @am sheet name...
+!                  out.rec : sheet data @am sheet data @am sheet data...
+!                  do a "convert @vm : @sm to @am : @vm in out.rec<x>" to get the data
+!                     in a usable format
+
+!                  if you do not specify filename, a file dialog box will be presented
+!                  if you do not specify the source directory, "accuterm input" in your
+!                     "my documents" folder will be used
+
+   $options ext
+   open '','pibs' to pibs else call no.file('','pibs',0)
+   open '','agency' to agent else call no.file('','agency',0)
+
+   escstx = char(27) : char(2)
+
+   * first, check to see if we're using accuterm
+
+   call operating.release (0,agent,op.rel)
+   call who.cubs ('',who,op.rel)
+   port = field(who,' ',1)
+   readv accuterm.check from pibs,port,20 else accuterm.check = ''
+
+   if accuterm.check = 1 then
+      crt 'accuterm detected'
+   end else
+      crt 'accuterm not detected - import aborted'
+      return
+   end
+
+   * if no filename is passed, prompt for it with the gui box
+
+   if filename = '' then
+      title = 'choose excel file to import'
+      filespec = 'excel files (*.xls):*.xls'
+      source.dir = ''
+      filename = ''
+      ok = ''
+      call fetch_trm_pathname('0', title, filespec, source.dir, filename, ok)
+      if not(ok) or filename = '' then
+         print 'no excel files available, import aborted.'
+         return
+      end
+      source.dir = source.dir[1,len(source.dir)-1]
+   end
+
+   * verify that our workfile exists - this should be the only change necessary per platform
+
+   open '','accuterm_workfile' to workfile else call no.file('','accuterm_workfile',0)
+
+   * launch object manager
+
+   call atinitobjmgr(errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atcreateobject('scripting.filesystemobject',fso, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atcreateobject('wscript.shell',wshell, errmsg, opts)
+   if errmsg # '' then goto handle.error
+
+   * setup - let's make sure the source directory exists if we didn't use the file chooser
+
+   if source.dir = '' then
+
+      keypath="hkcu\software\microsoft\windows\currentversion\explorer\shell folders\personal"
+
+      call atinvokemethod(wshell, "regread",keypath, mydocs, errmsg, opts)
+      if errmsg # '' then goto handle.error
+      source.dir = mydocs : "\accuterm input"
+      print 'importing from ' : source.dir
+      call atinvokemethod(fso, 'folderexists', source.dir, folder.exist, errmsg, opts)
+      if folder.exist = "false" then
+
+         * it doesn't, create it - the read below is probably going to fail!
+
+         call atinvokemethod(fso, 'createfolder', source.dir, folder.create, errmsg, opts)
+         if errmsg # '' then goto handle.error
+         print 'created folder'
+      end
+   end
+
+   * prepare to open the excel file
+
+   crt 'attempting to import file, please wait...'
+
+   keytemp = 'xlin' : time()
+   convert "." to "" in keytemp
+
+   max.sheets = 100
+   sheets = ''
+   out.rec = ''
+   files.to.get = ''
+
+   * open the excel file, grab the first sheet
+
+   call atcreateobject('excel.application',excelapplication, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atsetproperty(excelapplication, "displayalerts", 0, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atgetproperty(excelapplication, "workbooks", workbooks, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atinvokemethod(workbooks, "open", source.dir:"\":filename, workbook, errmsg, opts)
+   if errmsg # '' then goto handle.er
+   if workbook le 0 then
+      errmsg = 'file does not exist.'
+      goto handle.error
+   end
+
+   call atgetproperty(workbook, 'worksheets', worksheets, errmsg, opts)
+   if errmsg # '' then goto handle.error
+
+   * find number of worksheets in workbook, loop until fail
+
+   for j = 1 to max.sheets
+
+      call atgetproperty(worksheets, "item":@sm:j, thisworksheet, errmsg, opts)
+      if errmsg = 'subscript out of range' then exit
+      if errmsg # '' then goto handle.error
+
+      call atgetproperty(thisworksheet, 'name', this.sheet, errmsg, opts)
+      if errmsg # '' then goto handle.error
+      sheets<-1> = this.sheet
+
+      * now we have the worksheet, let's save just this worksheet as a
+      * tab-delimited text file, and read it in for our data
+
+      this.tempfile = keytemp : j : ".tmp"
+      call atinvokemethod(thisworksheet,'saveas', source.dir:"\":this.tempfile:@sm:'21', result, errmsg, opts)
+      if errmsg # '' then goto handle.error
+      files.to.get<-1> = this.tempfile
+
+      call atreleaseobject(thisworksheet, errmsg, opts)
+      if errmsg # '' then goto handle.error
+
+   next j
+
+   call atinvokemethod(workbook, "close", "", result, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atinvokemethod(excelapplication,'quit','', result, errmsg, opts)
+   if errmsg # '' then goto handle.error
+   call atreleaseobject(excelapplication,errmsg, opts)
+   if errmsg # '' then goto handle.error
+
+   * now that we're done with excel, let's get those temp files!
+
+   if len(source.dir) = 2 and source.dir[2,1] = ':' then
+      source.dir := '\' ; * fix for ft bug on root directories
+   end
+
+   num.files = dcount(files.to.get,@am)
+   for j = 1 to num.files
+      execute "ft",//in.<"r":@am:"k":@am:source.dir:@am:files.to.get<j>:@am:"accuterm_workfile":@am:files.to.get<j>
+      read in.rec from workfile,files.to.get<j> then
+         convert char(9) to @vm in in.rec
+         convert @am : @vm to @vm : @sm in in.rec
+         out.rec<-1> = in.rec
+      end
+
+      * now nuke the file on the pc and from the work file
+
+      call atinvokemethod(fso,'deletefile',source.dir:"\":files.to.get<j>,result,errmsg,opts)
+      if errmsg # '' then goto handle.error
+      delete workfile,files.to.get<j>
+   next j
+
+   crt j-1 : ' worksheets imported.'
+
+   * cleanup
+
+   call atresetobjmgr
+
+goto 90000
+
+handle.error:
+
+   crt 'windows/object bridge error : ' : errmsg
+   call atresetobjmgr
+
+90000:
+
+return
+end

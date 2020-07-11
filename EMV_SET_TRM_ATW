@@ -1,0 +1,220 @@
+PROGRAM EMV_SET_TRM_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 10/02/2019 16:59:33 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any Emulation
+
+! Function: Allows setting both Pick's & AccuTerm's term size & type from
+!           the command-line.
+
+! Syntax  : EMV_SET_TRM_ATW w,h,term-type
+
+! (Options: N/A
+
+! Examples: EMV_SET_TRM_ATW 160,60,vt220
+!           EMV_SET_TRM_ATW 240,67,vt320
+!           EMV_SET_TRM_ATW 240,67,viewpoint
+
+! Upcoming: Change is the only constant. -- Heraclitus
+
+   EQU IDENTITY TO 'EMV_SET_TRM_ATW'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF
+
+   CALL EMV_GET_CMD_LINE( RUN_MODE, FILENAME, PRG_NAME, PARA_LST, OPTS_LST )
+
+   TRM_WDTH = OCONV( FIELD( PARA_LST, ',', 1 ), 'MCN' )
+   TRM_HGHT = OCONV( FIELD( PARA_LST, ',', 2 ), 'MCN' )
+   TRM_TYPE =        FIELD( PARA_LST, ',', 3 )
+
+   VBA_CODE       = 'dim s as accutermclasses.session'
+   VBA_CODE< -1 > = 'set s = activesession'
+
+!  IF DECVT320 THEN
+
+!     VBA_CODE< -1 > = 's.termtype = attermvt320'
+!     VBA_CODE< -1 > = 's.termtype = vt320'
+
+!  END ELSE
+
+!     VBA_CODE< -1 > = 's.termtype = attermvt100'
+!     VBA_CODE< -1 > = 's.termtype = vt100'
+
+!  END
+
+!  VBA_CODE< -1 > = 's.ansi8bit = false'
+!  VBA_CODE< -1 > = 's.ansiappcursor = false'
+!  VBA_CODE< -1 > = 's.ansiappkeypad = false'
+!  VBA_CODE< -1 > = 's.answerback = ""'
+!  VBA_CODE< -1 > = 's.asciidelay = 4'
+!  VBA_CODE< -1 > = 's.asciieol = 0'
+!  VBA_CODE< -1 > = 's.autoanswer = false'
+!  VBA_CODE< -1 > = 's.autoclose = true'
+!  VBA_CODE< -1 > = 's.bkspsendsdel = false'
+!  VBA_CODE< -1 > = 's.cursortype = true'
+!  VBA_CODE< -1 > = 's.duplex = atduplexfull'
+!  VBA_CODE< -1 > = 's.gmodeenable = true'
+!  VBA_CODE< -1 > = 's.icon = "c:\progra~1\atwin\CompanyLogo.ico"'
+!  VBA_CODE< -1 > = 's.fkeys(112) = vbCr&"?"&vbCr'
+!  VBA_CODE< -1 > = 's.fkeys(113) = vbCr&"#"&vbCr&vbCr'
+!  VBA_CODE< -1 > = 's.fkeys(114) = "/"&vbCr'
+!  VBA_CODE< -1 > = 's.fkeys(115) = vbCr&"#"&vbCr'
+!  VBA_CODE< -1 > = 's.legiblefont = false'
+
+   IF TRM_WDTH EQ 80 AND TRM_HGHT EQ 24 THEN
+
+      VBA_CODE< -1 > = 's.normcols = 80'
+      VBA_CODE< -1 > = 's.normrows = 24'
+      VBA_CODE< -1 > = 's.normmode'
+      VBA_CODE< -1 > = 's.ScrMode = 0'
+      VBA_CODE< -1 > = 's.BkspSendsDel = false' ;! For hard-coded apps
+
+      EXECUTE 'TERM 80,24' CAPTURING MESSAGES
+
+   END ELSE
+
+      IF LEN( TRM_WDTH ) AND NUM( TRM_WDTH ) ELSE
+
+         TRM_WDTH  = 132
+
+      END
+
+      IF LEN( TRM_HGHT ) AND NUM( TRM_HGHT ) ELSE
+
+         TRM_HGHT  = 40
+
+      END
+
+      VBA_CODE< -1 > = 's.extcols = ' : TRM_WDTH
+      VBA_CODE< -1 > = 's.extrows = ' : TRM_HGHT
+      VBA_CODE< -1 > = 's.ScrMode = 1'
+!     VBA_CODE< -1 > = 's.BkspSendsDel = true'
+      VBA_CODE< -1 > = 's.BkspSendsDel = false' ;! For hard-coded apps
+
+      EXECUTE 'TERM ' : TRM_WDTH : ',' : TRM_HGHT CAPTURING MESSAGES
+
+   END
+
+   IF TRM_TYPE EQ '' ELSE
+
+      !  0 = tty / TTY
+      !  1 = viewpoint / ADDS Viewpoint A2
+      !  2 = viewpoint60 / ADDS Viewpoint 60
+      !  3 = viewpoint60 / Procomm Viewpoint 60
+      !  4 = viewpoint / ADDS Viewpoint A2 Enhanced
+      !  5 = wyse50 / Wyse 50
+      !  6 = wyse60 / Wyse 60
+      !  7 = vt52 / VT52
+      !  8 = vt220 / VT220
+      !  9 = ansi / ANSI BBS
+      ! 10 = pickmon / Pick PC Monitor
+      ! 11 = tektronix4014 / Tektronix 4014
+      ! 12 = vt100 / VT100
+      ! 13 = vt320 / VT320
+      ! 14 = vt420 / VT420
+      ! 15 = ansi / SCO Console
+      ! 16 = linux / Linux Console
+      ! 17 = tektronix4100 / Tektronix 4100
+      ! 18 = prism30 / MDIS Prism 30
+      ! 19 = prism8 / MDIS Prism P8
+
+      TERM_LST       = 'tty'
+      TERM_LST<  2 > = 'addsviewpointa2'
+      TERM_LST<  3 > = 'addsviewpoint60'
+      TERM_LST<  4 > = 'procommviewpoint60'
+      TERM_LST<  5 > = 'addsviewpointa2enhanced'
+      TERM_LST<  6 > = 'wyse50'
+      TERM_LST<  7 > = 'wyse60'
+      TERM_LST<  8 > = 'vt52'
+      TERM_LST<  9 > = 'vt220'
+      TERM_LST< 10 > = 'ansibbs'
+      TERM_LST< 11 > = 'pickpcmonitor'
+      TERM_LST< 12 > = 'tektronix4014'
+      TERM_LST< 13 > = 'vt100'
+      TERM_LST< 14 > = 'vt320'
+      TERM_LST< 15 > = 'vt420'
+      TERM_LST< 16 > = 'scoconsole'
+      TERM_LST< 17 > = 'linuxconsole'
+      TERM_LST< 18 > = 'tektronix4100'
+      TERM_LST< 19 > = 'mdisprism30'
+      TERM_LST< 20 > = 'mdisprismp8'
+
+      TRM_TYPE  = TRIM( OCONV( TRM_TYPE, 'MCL' ), ' ', 'A' )
+
+      LOCATE TRM_TYPE IN TERM_LST SETTING TERM_NUM ELSE
+
+         TERM_NUM  = INDEX( TERM_LST, TRM_TYPE, 1 ) + INDEX( TRM_TYPE, TERM_LST, 1 )
+         TERM_NUM  = DCOUNT( TERM_LST[ 1, TERM_NUM ], @AM )
+
+      END
+
+      IF TERM_NUM THEN
+
+         TERM_LST       = 'tty'
+         TERM_LST<  2 > = 'viewpoint'
+         TERM_LST<  3 > = 'viewpoint60'
+         TERM_LST<  4 > = 'viewpoint60'
+         TERM_LST<  5 > = 'viewpoint'
+         TERM_LST<  6 > = 'wyse50'
+         TERM_LST<  7 > = 'wyse60'
+         TERM_LST<  8 > = 'vt52'
+         TERM_LST<  9 > = 'vt220'
+         TERM_LST< 10 > = 'ansi'
+         TERM_LST< 11 > = 'pickmon'
+         TERM_LST< 12 > = 'tektronix4014'
+         TERM_LST< 13 > = 'vt100'
+         TERM_LST< 14 > = 'vt320'
+         TERM_LST< 15 > = 'vt420'
+         TERM_LST< 16 > = 'ansi'
+         TERM_LST< 17 > = 'linux'
+         TERM_LST< 18 > = 'tektronix4100'
+         TERM_LST< 19 > = 'prism30'
+         TERM_LST< 20 > = 'prism8'
+
+         EXECUTE 'TERM ' : TERM_LST< TERM_NUM > CAPTURING MESSAGES
+
+         VBA_CODE< -1 > = 's.termtype = ' : ( TERM_NUM - 1 )
+
+      END
+
+   END
+
+   EXECUTE '!pinky ' : @LOGNAME CAPTURING MESSAGES
+
+   OUR_USER_NAME = CHANGE( TRIM( FIELD( MESSAGES< 2 >, '/', 1 ) ), ' ', @AM )
+
+   DEL OUR_USER_NAME< 1 >
+   DEL OUR_USER_NAME< DCOUNT( OUR_USER_NAME, @AM ) >
+
+   OUR_USER_NAME  = CHANGE( OUR_USER_NAME, @AM, ' ' )
+
+   VBA_CODE< -1 > = 's.caption = "' : OUR_USER_NAME : ' (' : @LOGNAME : ') in ' : @WHO : ' at port ' : FIELD( OCONV( 'P', 'U50BB' ), ' ', 1 ) : ' (' : @TTY : ')  Term: ' : SYSTEM( 7 ) : '"'
+
+!  VBA_CODE< -1 > = 's.scalefont = true'
+!  VBA_CODE< -1 > = 's.slaveprintmode = false'
+!  VBA_CODE< -1 > = 's.sound = ""'
+!  VBA_CODE< -1 > = 's.telnetaltbreak = true'
+!  VBA_CODE< -1 > = 's.telnetnodelay = true'
+!  VBA_CODE< -1 > = 's.zmodemauto = 1'
+   VBA_CODE< -1 > = 'accuterm.activate'
+   VBA_CODE< -1 > = 's.activate'
+!  VBA_CODE< -1 > = 'accuterm.recentlistsize = 1'
+!  VBA_CODE< -1 > = 'accuterm.singleinstance = true'
+!  VBA_CODE< -1 > = 'accuterm.statuslinevisible = false'
+!  VBA_CODE< -1 > = 'accuterm.toolbarvisible = false'
+!  VBA_CODE< -1 > = 'accuterm.noclosewarning = false'
+!  VBA_CODE< -1 > = 'accuterm.autoclose = true'
+!  VBA_CODE< -1 > = 's.changed = false'
+!  VBA_CODE< -1 > = 's.save'
+!  VBA_CODE< -1 > = 's.output cstr(s.termtype)&"~"&cstr(s.cols)&"~"&cstr(s.rows)&vbCr'
+!  VBA_CODE< -1 > = 's.ResetTerm'
+CRT CHANGE( VBA_CODE, @AM, CHAR( 13 ) : CHAR( 10 ) ) : ; INPUT DUMMY
+   CRT @( -10 ) : CHAR( 27 ) : CHAR( 2 ) : 'P ' : CHANGE( VBA_CODE, @AM, CHAR( 25 ) ) : CHAR( 13 ) :
+
+STOP

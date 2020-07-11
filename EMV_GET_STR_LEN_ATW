@@ -1,0 +1,37 @@
+SUBROUTINE EMV_GET_STR_LEN_ATW( STRG_LEN, THE_STRG )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 03/25/2019 15:34:52 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Returns the length of the string in dialog units.
+
+! Var_Name IO Typ Function_______________________________________________
+! STRG_LEN  < Num The length in dialog-units of THE_STRG
+! THE_STRG >  Str The string to be measured
+
+   EQU IDENTITY TO 'EMV_GET_STR_LEN_ATW'
+
+   INCLUDE EMV_UBIQUITOUS_ATW
+
+   STRG_LEN  = 0
+
+   IF ASSIGNED( THE_STRG ) THEN
+
+      LAST_ONE  = LEN( THE_STRG )
+
+      FOR CHAR_POS = 1 TO LAST_ONE
+
+         STRG_LEN += ATW_FNT_WID_LST( SEQ( THE_STRG[ CHAR_POS, 1 ] ) )
+
+      NEXT CHAR_POS
+
+   END
+
+RETURN

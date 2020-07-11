@@ -1,0 +1,281 @@
+PROGRAM EMV_USR_ED_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 00:27:04 by Marcus
+
+! Platform: D3; AccuTerm
+
+! Function: Presents the user a windows dialog-box for cruising/modify-
+!           ing the users.
+
+   EQU IDENTITY TO 'EMV_USR_ED_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB PRIME.THE.VARIABLES
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB PARSE.THE.FILE
+
+STOP
+
+PRIME.THE.VARIABLES:
+
+   CALL EMV_GET_REC( 'EMV,CTL', 'STATES'         , 1, 0, 0, '', @FALSE, @TRUE, @FALSE, EMV_CTLS, STATE_LIST, SUCCESSF
+   CALL EMV_GET_REC( 'EMV,CTL', 'DEPARTMENTS'    , 0, 0, 0, '', @FALSE, @TRUE, @FALSE, EMV_CTLS, DEPT_LIST , SUCCESSFUL )
+   CALL EMV_GET_REC( 'EMV,CTL', IDENTITY,          0, 0, 0, '', @FALSE, @TRUE, @FALSE, EMV_CTLS,   THE_DLOG  , SUCCESSFUL )
+   CALL EMV_GET_REC( 'EMV,CTL', IDENTITY : '_NEW', 0, 0, 0, '', @FALSE, @TRUE, @FALSE, EMV_CTLS,   NEW_DLOG  , SUCCESSFUL )
+
+   CONVERT @VM TO @AM IN STATE_LIST
+   CONVERT @AM TO  EM IN THE_DLOG
+   CONVERT @AM TO  EM IN NEW_DLOG
+
+   USER_LIST = ''
+
+   CALL EMV_MOUNT_FILE( 'USERS', THE_USERS, @FALSE, LOCKABLE_FILE, SUCCESSFUL )
+
+   CALL EMV_ISSUE_TCL_CMDS( 'SSELECT USERS', NUM_USERS )
+
+   NUM_USERS = FIELD( NUM_USERS, ' ', 2 )
+
+   FOR USER_NUM = 1 TO NUM_USERS
+
+      READNEXT USER_KEY THEN
+
+         USER_LIST< -1 > = USER_KEY
+
+      END
+
+   NEXT USER_NUM
+
+   USER_NUM  = 1
+
+RETURN
+
+PARSE.THE.FILE:
+
+   LOOP
+
+      USER_KEY = USER_LIST< USER_NUM >
+
+      READU OLD_USER FROM THE_USERS, USER_KEY THEN
+
+         GOSUB STUFF.THE.DLOG
+         GOSUB PAINT.THE.DLOG
+
+      END
+
+   WHILE CONTINUING AND SUCCESSFUL DO REPEAT
+
+RETURN
+
+STUFF.THE.DLOG:
+
+   LOCATE OLD_USER< 2 > IN DEPT_LIST SETTING DEPT_IDX ELSE
+
+      DEPT_IDX = 1
+
+   END
+
+   DEPT_IDX -= 1
+
+   LOCATE OLD_USER< 3, 3 > IN STATE_LIST SETTING STATE_IDX ELSE
+
+      STATE_IDX = 1
+
+   END
+
+   STATE_IDX -= 1
+
+   TMP_DLOG = THE_DLOG
+
+   TMP_DLOG = CHANGE( TMP_DLOG, '%FullName%' ,        OLD_USER< 1 >                     )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%DeptIdx%'  ,        DEPT_IDX                        )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%UserId%'   ,        USER_KEY                        )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%Password%' ,        OLD_USER< 2, 2 >                  )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%Street%'   ,        OLD_USER< 3, 1 >                  )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%City%'     ,        OLD_USER< 3, 2 >                  )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%StateIdx%' ,        STATE_IDX                        )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%Zip%'      ,        OLD_USER< 3, 4 >                  )
+
+   IF OLD_USER< 4, 1 > NE '' THEN TMP_DLOG = CHANGE( TMP_DLOG, '%HAPhone%'   , '(' :  TRIM( OLD_USER< 4, 1 > '###) ###-#### ####' ) ) ELSE TMP_DLOG = CHANGE( TMP_DLOG, '%HAPhone%'   , '' )
+   IF OLD_USER< 4, 2 > NE '' THEN TMP_DLOG = CHANGE( TMP_DLOG, '%OSPhone%'   , '(' :  TRIM( OLD_USER< 4, 2 > '###) ###-#### ####' ) ) ELSE TMP_DLOG = CHANGE( TMP_DLOG, '%OSPhone%'   , '' )
+   IF OLD_USER< 4, 3 > NE '' THEN TMP_DLOG = CHANGE( TMP_DLOG, '%Fax%'      , '(' :  TRIM( OLD_USER< 4, 3 > '###) ###-#### ####' ) ) ELSE TMP_DLOG = CHANGE( TMP_DLOG, '%Fax%'      , '' )
+
+   TMP_DLOG = CHANGE( TMP_DLOG, '%EMail%'    ,        OLD_USER< 4, 4 >                  )
+   TMP_DLOG = CHANGE( TMP_DLOG, '%IpAddress%',        OLD_USER< 4, 5 >                  )
+
+   IF OLD_USER< 5, 1 > NE '' THEN TMP_DLOG = CHANGE( TMP_DLOG, '%EmpFm%'   , OCONV( OLD_USER< 5, 1 >, 'D4/' ) ) ELSE TMP_DLOG = CHANGE( TMP_DLOG, '%EmpFm%', '' )
+   IF OLD_USER< 5, 2 > NE '' THEN TMP_DLOG = CHANGE( TMP_DLOG, '%EmpTo%'   , OCONV( OLD_USER< 5, 2 >, 'D4/' ) ) ELSE TMP_DLOG = CHANGE( TMP_DLOG, '%EmpTo%', '' )
+
+RETURN
+
+PAINT.THE.DLOG:
+
+   CRT ESC : STX : 'P ' : TMP_DLOG
+
+   ECHO OFF
+
+   INPUT DLOG_DATA :
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+   CONVERT '|' TO AM IN DLOG_DATA
+
+   BEGIN CASE
+
+      CASE DLOG_DATA< 1 > EQ 0 ; GOSUB STORE.FINAL.CHANGE ;! OK
+      CASE DLOG_DATA< 1 > EQ 1 ; CONTINUING = @FALSE      ;! CANCEL
+      CASE DLOG_DATA< 1 > EQ 2 ; GOSUB ERASE.THE.USER     ;! DELETE
+      CASE DLOG_DATA< 1 > EQ 3 ; GOSUB FETCH.PRV.USER     ;! PREVIOUS
+      CASE DLOG_DATA< 1 > EQ 4 ; GOSUB ENTER.NEW.NAME     ;! NEW
+      CASE DLOG_DATA< 1 > EQ 5 ; GOSUB FETCH.NXT.USER     ;! NEXT
+
+   END CASE
+
+RETURN
+
+STORE.FINAL.CHANGE:
+
+   GOSUB STORE.THE.CHANGES
+
+   CONTINUING = @FALSE
+
+RETURN
+
+ERASE.THE.USER:
+
+   DELETE THE_USERS, USER_KEY
+
+   DEL USER_LIST< USER_NUM >
+
+   NUM_USERS -= 1
+
+   IF USER_NUM GT NUM_USERS THEN
+
+      USER_NUM = 1
+
+   END
+
+RETURN
+
+ENTER.NEW.NAME:
+
+   CRT ESC : STX : 'P ' : NEW_DLOG
+
+   ECHO OFF
+
+   INPUT DLOG_DATA :
+
+   IF ECHO_STATE THEN
+
+      ECHO ON
+
+   END
+
+   CONVERT '|' TO AM IN DLOG_DATA
+
+   BEGIN CASE
+
+      CASE DLOG_DATA< 1 > EQ 0 ; GOSUB SETUP.NEW.USER ;! Ok
+      CASE DLOG_DATA< 1 > EQ 1 ;! Cancel
+
+   END CASE
+
+RETURN
+
+SETUP.NEW.USER:
+
+   FULL_NAME = DLOG_DATA< 2 >
+   TEMP_NAME = CHANGE( OCONV( OCONV( FULL_NAME, 'MCT' ), 'MCA' ), ' ', '' )
+   NAME_LEN  = LEN( TEMP_NAME )
+   KEY_LEN   = 5
+
+   LOOP
+
+      KEY_LEN += 1
+      USER_KEY = TEMP_NAME[ 1, KEY_LEN ]
+
+      CALL EMV_CHK_LST_VAR( USER_LIST, USER_KEY, 'AL', @TRUE, @FALSE, USER_NUM, ADDED )
+
+   UNTIL ADDED OR KEY_LEN GE NAME_LEN DO REPEAT
+
+   IF ADDED ELSE
+
+      ALT_NUM = 0
+
+      LOOP
+
+         ALT_NUM += 1
+
+         CALL EMV_CHK_LST_VAR( USER_LIST, USER_KEY : '_' : ALT_UM 'R%3', 'AL', @TRUE, @FALSE, USER_NUM, ADDED )
+
+      UNTIL ADDED DO REPEAT
+
+   END
+
+   CALL EMV_STORE_REC( 'USERS', USER_KEY, 0, 0, 0, '', @FALSE, @TRUE, @FALSE, THE_USERS, FULL_NAME, SUCCESSFUL )
+
+RETURN
+
+FETCH.PRV.USER:
+
+   GOSUB STORE.THE.CHANGES
+
+   USER_NUM -= 1
+
+   IF USER_NUM LT 1 THEN
+
+      USER_NUM = NUM_USERS
+
+   END
+
+RETURN
+
+FETCH.NXT.USER:
+
+   GOSUB STORE.THE.CHANGES
+
+   USER_NUM += 1
+
+   IF USER_NUM GT NUM_USERS THEN
+
+      USER_NUM = 1
+
+   END
+
+RETURN
+
+STORE.THE.CHANGES:
+
+   NEW_USER = OLD_USER
+
+   NEW_USER<   1  > =             DLOG_DATA<  2 >
+   NEW_USER< 2, 1 > =  DEPT_LIST< DLOG_DATA<  3 > + 1 >
+   NEW_USER< 2, 2 > =             DLOG_DATA<  4 >
+   NEW_USER< 3, 1 > =             DLOG_DATA<  5 >
+   NEW_USER< 3, 2 > =             DLOG_DATA<  6 >
+   NEW_USER< 3, 3 > = STATE_LIST< DLOG_DATA<  7 > + 1 >
+   NEW_USER< 3, 4 > =             DLOG_DATA<  8 >
+   NEW_USER< 4, 1 > =      OCONV( DLOG_DATA<  9 >, 'MCN' )
+   NEW_USER< 4, 2 > =      OCONV( DLOG_DATA< 10 >, 'MCN' )
+   NEW_USER< 4, 3 > =      OCONV( DLOG_DATA< 11 >, 'MCN' )
+   NEW_USER< 4, 4 > =      OCONV( DLOG_DATA< 12 >, 'MCL' )
+   NEW_USER< 4, 5 > =             DLOG_DATA< 13 >
+   NEW_USER< 5, 1 > =      ICONV( DLOG_DATA< 14 >,   'D'  )
+   NEW_USER< 5, 2 > =      ICONV( DLOG_DATA< 15 >,   'D'  )
+
+   IF NEW_USER NE OLD_USER THEN
+
+!     WRITE NEW_USER ON THE_USERS, USER_KEY
+
+   END
+
+RETURN

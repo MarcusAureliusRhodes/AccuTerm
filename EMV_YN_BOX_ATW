@@ -1,0 +1,208 @@
+SUBROUTINE EMV_YN_BOX_ATW( RESPONSE, HEADLINE, MESSAGES, BTTN_SET, MAN_PAGE )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:14 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Offers the user a message, with the usual  buttons:  Yes/Ok/-
+!           Continue/Next, No/Cancel/Quit/Back, and, optionally, Help.
+
+! +----------------------------+
+! |__________HeadLine__________|
+! |                            |
+! | Your message goes here!    |
+! |                            |
+! | +------+ +------+ +------+ |
+! | | Help | |Cancel| |  Ok  | |
+! | +------+ +------+ +------+ |
+! +----------------------------+
+
+! Var_name IO Typ Description_____________________________________________
+! RESPONSE  < Int 0=No/Cancel/Quit/Back
+!                 1=Yes/Ok/Continue/Next
+!                 2=Help
+! HEADLINE >  Str Title of the dialog-box
+! MESSAGES >  1DA AMs=paragraph breaks.  Gets  wrapped  into  a  variable-
+!                 sized rectangle.
+! BTTN_SET >  Int Which pair of what are all essentially Yes/No buttons is
+!                 best suited to the context:
+!                 1=Ok/Cancel
+!                 2=Yes/No
+!                 3=Continue/Quit
+!                 4=Next/Back
+! MAN_PAGE >  Str Help page name, or null for no help button at all
+
+   EQU IDENTITY TO 'EMV_YN_BOX_ATW'
+
+   IF IDENTITY THEN GOSUB CHECK.OUR.PARAMETERS
+   IF ALLSWELL THEN GOSUB SETUP.VBA.STRINGS
+   IF ALLSWELL THEN GOSUB PRIME.OUR.VARS
+   IF ALLSWELL THEN GOSUB BUILD.VBA.CODE
+
+   LOOP
+
+      ECHO OFF
+
+      CRT CHAR( 27 ) : CHAR( 2 ) : VBA_CODE : CHAR( 13 ) :
+
+      INPUT RESPONSE :
+
+      ECHO ON
+
+      RESPONSE -= 1
+
+      IF RESPONSE THEN
+
+         RESPONSE -= 1
+
+         EXIT
+
+      END ELSE
+
+         CALL EMV_SHO_HLP_ATW( MAN_PAGE )
+
+      END
+
+   REPEAT
+
+RETURN ;! to the calling program.
+
+CHECK.OUR.PARAMETERS:
+
+   ALLSWELL  = 1
+
+   CALL EMV_VAR_CHK( PRG_NAME, HEADLINE, 'HEADLINE', '!? No heading ?!', ALLSWELL )
+   CALL EMV_VAR_CHK( PRG_NAME, MESSAGES, 'MESSAGES', '!? No message ?!', ALLSWELL )
+   CALL EMV_VAR_CHK( PRG_NAME, BTTN_SET, 'BTTN_SET', 1                 , ALLSWELL )
+   CALL EMV_VAR_CHK( PRG_NAME, MAN_PAGE, 'MAN_PAGE', ''                , ALLSWELL )
+
+RETURN
+
+SETUP.VBA.STRINGS:
+
+   CALL EMV_VBA_STR_FMT_ATW( HEAD_TXT, HEADLINE )
+   CALL EMV_VBA_STR_FMT_ATW( MSG_TEXT, MESSAGES )
+
+RETURN
+
+PRIME.OUR.VARS:
+
+   EQU BORDER_H TO  7
+   EQU BORDER_W TO 10
+   EQU BUTTON_H TO 22
+   EQU FNT_WDTH TO 15 ;! Average width of each character
+   EQU LBL_WDTH TO  8 ;! The width of 'Continue'
+
+   BTTN_LST  = '&Ok]&Cancel/&Yes]&No/&Continue]&Quit/&Next/&Back'
+   BTTN_LST  = CHANGE( BTTN_LST, '/', @AM )
+   BTTN_LST  = CHANGE( BTTN_LST, ']', @VM )
+   BTTN_LST  =  RAISE( BTTN_LST< BTTN_SET > )
+
+   BUTTON_M  = 2 + ( MAN_PAGE NE '' )
+
+   ! The box must be at least big enough for all the buttons and a single
+   ! line of text.
+
+   ! Wrap the text into as rectangular an arrangement as possible.
+
+   ! Let's say you have a 238-character
+   ! message, like this one.  Rectangular would
+   ! mean about twice as wide as tall, which
+   ! translates to about 7 times as many
+   ! characters per line as number of lines, and
+   ! that works out to ~6X40-character lines.
+GOTO 1000
+FMT_STR1  = 'MR3'
+FMT_STR2  = 'R#9'
+CHR_WDTH  =  7
+CHR_HGHT  = 12
+RCTANGLE  =  0.5625
+
+   PRGRPH_L  = LEN( MESSAGES ) * CHR_WDTH
+   BOX_WDTH  = PRGRPH_L
+   BOX_HGHT  = CHR_HGHT
+   ADJSTMNT  = PRGRPH_L / 2
+   PROPORTN  = BOX_HGHT / BOX_WDTH
+   FINISHED  = 0
+
+   LOOP WHILE INT( ABS( ADJSTMNT ) ) DO
+
+CRT
+CRT 'BOX_WDTH = ' : ( BOX_WDTH FMT_STR1 ) FMT_STR2
+CRT 'BOX_HGHT = ' : ( BOX_HGHT FMT_STR1 ) FMT_STR2
+CRT 'PROPORTN = ' : ( PROPORTN FMT_STR1 ) FMT_STR2
+CRT 'ADJSTMNT = ' : ( ADJSTMNT FMT_STR1 ) FMT_STR2
+CRT 'FINISHED = ' : ( FINISHED FMT_STR1 ) FMT_STR2
+INPUT DUMMY
+
+      BOX_WDTH -= ADJSTMNT
+      BOX_HGHT  = PRGRPH_L / BOX_WDTH * CHR_HGHT
+      PROPORTN  = BOX_HGHT / BOX_WDTH
+      ADJSTMNT  = ADJSTMNT / 2 * ( 0 - ( PROPORTN LT RCTANGLE ) )
+
+   REPEAT
+1000:
+BOX_WDTH  = 252
+BOX_HGHT  = 58
+   BOX_WDTH  = INT( BOX_WDTH + 0.5 )
+   BOX_HGHT  = INT( BOX_HGHT + 0.5 )
+   GRP_WDTH  = BOX_WDTH + 16
+   GRP_HGHT  = BOX_HGHT + 26
+
+   DIALOG_H  = GRP_HGHT + 76
+   DIALOG_W  = GRP_WDTH + 24
+
+   BUTTON_W  = FNT_WDTH * LBL_WDTH
+!  DIALOG_W  = BOX_WDTH + ( BUTTON_W + BORDER_W ) * BUTTON_M + BORDER_W
+   BUTTON_Y  = DIALOG_H - BUTTON_H - BORDER_H
+
+RETURN
+
+BUILD.VBA.CODE:
+
+!  VBA_CODE       = 'Dim S As Session'
+!  VBA_CODE< -1 > = 'Set S=ActiveSession'
+!  VBA_CODE< -1 > = 'Begin Dialog UserDialog ' : DIALOG_W : ',' : DIALOG_H : ',"' : BOX_HEAD : '"'
+
+!  VBA_CODE  = 'PDim s as accutermclasses.session'
+   VBA_CODE  = 'PDim s as session'
+   VBA_CODE := '`set s=activesession'
+   VBA_CODE := '`Begin Dialog UserDialog ' : DIALOG_W : ',' : DIALOG_H : ',' : HEAD_TXT
+
+   VBA_CODE := '`GroupBox 8,8,' : GRP_WDTH : ',' : GRP_HGHT : ',' : HEAD_TXT
+   VBA_CODE := '`Text 18,26,' : BOX_WDTH : ',' : BOX_HGHT : ',' : MSG_TEXT
+!  VBA_CODE := '`Text 8,8,' : ( DIALOG_W - 16 ) : ',' : ( DIALOG_H - 16 ) : ',"' : HEAD_TXT : '","' : MSG_TEXT : '"'
+!  VBA_CODE := '`TextBox 8,8,' : ( DIALOG_W - 16 ) : ',' : BOX_HGHT : ',.Text$,1'
+
+   IF MAN_PAGE NE '' THEN
+
+      BUTTON_X  = DIALOG_W - ( BUTTON_W + BORDER_W ) * 3
+
+      VBA_CODE := '`PushButton '   : BUTTON_X : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"&Help"'
+
+   END
+
+   BUTTON_X  = DIALOG_W - ( BUTTON_W + BORDER_W ) * 2
+
+   VBA_CODE := '`PushButton '   : BUTTON_X : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"' : BTTN_LST< 2 > : '"'
+
+   BUTTON_X  = DIALOG_W - ( BUTTON_W + BORDER_W ) * 1
+
+   VBA_CODE := '`PushButton '   : BUTTON_X : ',' : BUTTON_Y : ',' : BUTTON_W : ',' : BUTTON_H : ',"' : BTTN_LST< 1 > : '"'
+
+   VBA_CODE := '`End Dialog'
+   VBA_CODE := '`Dim dlg As UserDialog'
+!  VBA_CODE := '`dlg.Text$ = "' : MSG_TEXT : '"'
+   VBA_CODE := '`s.Output CStr(Dialog(dlg,1))&vbCr'
+
+CRT CHANGE( VBA_CODE, '`', CHAR( 13 ) : CHAR( 10 ) ) : ; INPUT DUMMY
+
+   VBA_CODE  = CHANGE( VBA_CODE, '`', CHAR( 25 ) )
+
+RETURN

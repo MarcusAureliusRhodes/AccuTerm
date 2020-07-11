@@ -1,0 +1,285 @@
+SUBROUTINE EMV_FNT_WID_TBL_ATW( MAT ATW_FNT_WID_LST )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 03/11/2019 13:50:51 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Returns a table (a 1D dimensioned array) of  the  widths  (in
+!           dialog-units) of the characters in the font used by AccuTerm/
+!           Windows by default.
+
+! Var_Name_______ IO Typ Description_____________________________________
+! ATW_FNT_WID_LST  < 1DA table of character widths
+
+   EQU IDENTITY TO 'EMV_FNT_WID_TBL_ATW'
+
+!  INCLUDE EMV_UBIQUITOUS_STUFF
+!  INCLUDE EMV_UBIQUITOUS_ATW
+
+   DIM ATW_FNT_WID_LST( 256 )
+
+   ! These are the widths of the characters in 'dialog-units'.
+
+   ATW_FNT_WID_LST(   1 ) = 18.1818 ;!
+   ATW_FNT_WID_LST(   2 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   3 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   4 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   5 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   6 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   7 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   8 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(   9 ) =  0      ;!
+   ATW_FNT_WID_LST(  10 ) =  0      ;!
+   ATW_FNT_WID_LST(  11 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  12 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  13 ) =  0      ;!
+   ATW_FNT_WID_LST(  14 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  15 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  16 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  17 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  18 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  19 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  20 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  21 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  22 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  23 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  24 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  25 ) =  0      ;! 
+   ATW_FNT_WID_LST(  26 ) =  0      ;! 
+   ATW_FNT_WID_LST(  27 ) =  9.0909 ;! 
+   ATW_FNT_WID_LST(  28 ) =  0      ;! 
+   ATW_FNT_WID_LST(  29 ) =  0      ;! 
+   ATW_FNT_WID_LST(  30 ) =  0      ;! 
+   ATW_FNT_WID_LST(  31 ) =  0      ;! 
+   ATW_FNT_WID_LST(  32 ) =  4.0323 ;!
+   ATW_FNT_WID_LST(  33 ) =  4.0323 ;! !
+   ATW_FNT_WID_LST(  34 ) =  6.0606 ;! "
+   ATW_FNT_WID_LST(  35 ) =  8.0645 ;! #
+   ATW_FNT_WID_LST(  36 ) =  8.0645 ;! $
+   ATW_FNT_WID_LST(  37 ) = 11.1111 ;! %
+   ATW_FNT_WID_LST(  38 ) =  9.0909 ;! &
+   ATW_FNT_WID_LST(  39 ) =  4.0323 ;! '
+   ATW_FNT_WID_LST(  40 ) =  4.0323 ;! (
+   ATW_FNT_WID_LST(  41 ) =  4.0323 ;! )
+   ATW_FNT_WID_LST(  42 ) =  6.0606 ;! *
+   ATW_FNT_WID_LST(  43 ) =  8.0645 ;! +
+   ATW_FNT_WID_LST(  44 ) =  4.0323 ;! ,
+   ATW_FNT_WID_LST(  45 ) =  4.0323 ;! -
+   ATW_FNT_WID_LST(  46 ) =  4.0323 ;! .
+   ATW_FNT_WID_LST(  47 ) =  4.0323 ;! /
+   ATW_FNT_WID_LST(  48 ) =  8.0645 ;! 0
+   ATW_FNT_WID_LST(  49 ) =  8.0645 ;! 1
+   ATW_FNT_WID_LST(  50 ) =  8.0645 ;! 2
+   ATW_FNT_WID_LST(  51 ) =  8.0645 ;! 3
+   ATW_FNT_WID_LST(  52 ) =  8.0645 ;! 4
+   ATW_FNT_WID_LST(  53 ) =  8.0645 ;! 5
+   ATW_FNT_WID_LST(  54 ) =  8.0645 ;! 6
+   ATW_FNT_WID_LST(  55 ) =  8.0645 ;! 7
+   ATW_FNT_WID_LST(  56 ) =  8.0645 ;! 8
+   ATW_FNT_WID_LST(  57 ) =  8.0645 ;! 9
+   ATW_FNT_WID_LST(  58 ) =  4.0323 ;! :
+   ATW_FNT_WID_LST(  59 ) =  4.0323 ;! ;
+   ATW_FNT_WID_LST(  60 ) =  8.0645 ;! <
+   ATW_FNT_WID_LST(  61 ) =  8.0645 ;! =
+   ATW_FNT_WID_LST(  62 ) =  8.0645 ;! >
+   ATW_FNT_WID_LST(  63 ) =  8.0645 ;! ?
+   ATW_FNT_WID_LST(  64 ) = 14.0845 ;! @
+   ATW_FNT_WID_LST(  65 ) =  8.0645 ;! A
+   ATW_FNT_WID_LST(  66 ) = 10.101  ;! B
+   ATW_FNT_WID_LST(  67 ) =  9.0909 ;! C
+   ATW_FNT_WID_LST(  68 ) = 10.101  ;! D
+   ATW_FNT_WID_LST(  69 ) =  9.0909 ;! E
+   ATW_FNT_WID_LST(  70 ) =  8.0645 ;! F
+   ATW_FNT_WID_LST(  71 ) = 10.101  ;! G
+   ATW_FNT_WID_LST(  72 ) = 10.101  ;! H
+   ATW_FNT_WID_LST(  73 ) =  4.0323 ;! I
+   ATW_FNT_WID_LST(  74 ) =  7.0423 ;! J
+   ATW_FNT_WID_LST(  75 ) =  9.0909 ;! K
+   ATW_FNT_WID_LST(  76 ) =  8.0645 ;! L
+   ATW_FNT_WID_LST(  77 ) = 12.0482 ;! M
+   ATW_FNT_WID_LST(  78 ) = 10.101  ;! N
+   ATW_FNT_WID_LST(  79 ) = 10.101  ;! O
+   ATW_FNT_WID_LST(  80 ) =  9.0909 ;! P
+   ATW_FNT_WID_LST(  81 ) = 10.101  ;! Q
+   ATW_FNT_WID_LST(  82 ) = 10.101  ;! R
+   ATW_FNT_WID_LST(  83 ) =  9.0909 ;! S
+   ATW_FNT_WID_LST(  84 ) =  8.0645 ;! T
+   ATW_FNT_WID_LST(  85 ) = 10.101  ;! U
+   ATW_FNT_WID_LST(  86 ) =  8.0645 ;! V
+   ATW_FNT_WID_LST(  87 ) = 14.0845 ;! W
+   ATW_FNT_WID_LST(  88 ) =  9.0909 ;! X
+   ATW_FNT_WID_LST(  89 ) = 10.101  ;! Y
+   ATW_FNT_WID_LST(  90 ) =  9.0909 ;! Z
+   ATW_FNT_WID_LST(  91 ) =  4.0323 ;! [
+   ATW_FNT_WID_LST(  92 ) =  4.0323 ;! \
+   ATW_FNT_WID_LST(  93 ) =  4.0323 ;! ]
+   ATW_FNT_WID_LST(  94 ) =  5.0505 ;! ^
+   ATW_FNT_WID_LST(  95 ) =  8.0645 ;! _
+   ATW_FNT_WID_LST(  96 ) =  5.0505 ;! `
+   ATW_FNT_WID_LST(  97 ) =  8.0645 ;! a
+   ATW_FNT_WID_LST(  98 ) =  8.0645 ;! b
+   ATW_FNT_WID_LST(  99 ) =  7.0423 ;! c
+   ATW_FNT_WID_LST( 100 ) =  8.0645 ;! d
+   ATW_FNT_WID_LST( 101 ) =  8.0645 ;! e
+   ATW_FNT_WID_LST( 102 ) =  4.0323 ;! f
+   ATW_FNT_WID_LST( 103 ) =  8.0645 ;! g
+   ATW_FNT_WID_LST( 104 ) =  8.0645 ;! h
+   ATW_FNT_WID_LST( 105 ) =  4.0323 ;! i
+   ATW_FNT_WID_LST( 106 ) =  4.0323 ;! j
+   ATW_FNT_WID_LST( 107 ) =  7.0423 ;! k
+   ATW_FNT_WID_LST( 108 ) =  4.0323 ;! l
+   ATW_FNT_WID_LST( 109 ) = 12.0482 ;! m
+   ATW_FNT_WID_LST( 110 ) =  8.0645 ;! n
+   ATW_FNT_WID_LST( 111 ) =  8.0645 ;! o
+   ATW_FNT_WID_LST( 112 ) =  8.0645 ;! p
+   ATW_FNT_WID_LST( 113 ) =  8.0645 ;! q
+   ATW_FNT_WID_LST( 114 ) =  5.0505 ;! r
+   ATW_FNT_WID_LST( 115 ) =  8.0645 ;! s
+   ATW_FNT_WID_LST( 116 ) =  4.0323 ;! t
+   ATW_FNT_WID_LST( 117 ) =  8.0645 ;! u
+   ATW_FNT_WID_LST( 118 ) =  8.0645 ;! v
+   ATW_FNT_WID_LST( 119 ) = 10.101  ;! w
+   ATW_FNT_WID_LST( 120 ) =  8.0645 ;! x
+   ATW_FNT_WID_LST( 121 ) =  8.0645 ;! y
+   ATW_FNT_WID_LST( 122 ) =  8.0645 ;! z
+   ATW_FNT_WID_LST( 123 ) =  5.0505 ;! {
+   ATW_FNT_WID_LST( 124 ) =  4.0323 ;! |
+   ATW_FNT_WID_LST( 125 ) =  5.0505 ;! }
+   ATW_FNT_WID_LST( 126 ) =  5.0505 ;! ~
+   ATW_FNT_WID_LST( 127 ) =  5.0505 ;! 
+   ATW_FNT_WID_LST( 128 ) =  9.0909 ;! Ä
+   ATW_FNT_WID_LST( 129 ) =  0      ;! Å
+   ATW_FNT_WID_LST( 130 ) =  4.0323 ;! Ç
+   ATW_FNT_WID_LST( 131 ) =  4.0323 ;! É
+   ATW_FNT_WID_LST( 132 ) =  4.0323 ;! Ñ
+   ATW_FNT_WID_LST( 133 ) =  4.0323 ;! Ö
+   ATW_FNT_WID_LST( 134 ) =  4.0323 ;! Ü
+   ATW_FNT_WID_LST( 135 ) =  4.0323 ;! á
+   ATW_FNT_WID_LST( 136 ) =  4.0323 ;! à
+   ATW_FNT_WID_LST( 137 ) =  4.0323 ;! â
+   ATW_FNT_WID_LST( 138 ) =  4.0323 ;! ä
+   ATW_FNT_WID_LST( 139 ) =  4.0323 ;! ã
+   ATW_FNT_WID_LST( 140 ) =  4.0323 ;! å
+   ATW_FNT_WID_LST( 141 ) =  0      ;! ç
+   ATW_FNT_WID_LST( 142 ) =  4.0323 ;! é
+   ATW_FNT_WID_LST( 143 ) =  0      ;! è
+   ATW_FNT_WID_LST( 144 ) =  0      ;! ê
+   ATW_FNT_WID_LST( 145 ) =  4.0323 ;! ë
+   ATW_FNT_WID_LST( 146 ) =  4.0323 ;! í
+   ATW_FNT_WID_LST( 147 ) =  4.0323 ;! ì
+   ATW_FNT_WID_LST( 148 ) =  4.0323 ;! î
+   ATW_FNT_WID_LST( 149 ) =  4.0323 ;! ï
+   ATW_FNT_WID_LST( 150 ) =  4.0323 ;! ñ
+   ATW_FNT_WID_LST( 151 ) =  4.0323 ;! ó
+   ATW_FNT_WID_LST( 152 ) =  4.0323 ;! ò
+   ATW_FNT_WID_LST( 153 ) =  4.0323 ;! ô
+   ATW_FNT_WID_LST( 154 ) =  4.0323 ;! ö
+   ATW_FNT_WID_LST( 155 ) =  4.0323 ;! õ
+   ATW_FNT_WID_LST( 156 ) =  4.0323 ;! ú
+   ATW_FNT_WID_LST( 157 ) =  0      ;! ù
+   ATW_FNT_WID_LST( 158 ) =  4.0323 ;! û
+   ATW_FNT_WID_LST( 159 ) =  4.0323 ;! ü
+   ATW_FNT_WID_LST( 160 ) =  9.0909 ;! †
+   ATW_FNT_WID_LST( 161 ) =  4.0323 ;! °
+   ATW_FNT_WID_LST( 162 ) =  8.0645 ;! ¢
+   ATW_FNT_WID_LST( 163 ) =  8.0645 ;! £
+   ATW_FNT_WID_LST( 164 ) =  8.0645 ;! §
+   ATW_FNT_WID_LST( 165 ) =  8.0645 ;! •
+   ATW_FNT_WID_LST( 166 ) =  4.0323 ;! ¶
+   ATW_FNT_WID_LST( 167 ) =  8.0645 ;! ß
+   ATW_FNT_WID_LST( 168 ) =  5.0251 ;! ®
+   ATW_FNT_WID_LST( 169 ) = 10.101  ;! ©
+   ATW_FNT_WID_LST( 170 ) =  5.0505 ;! ™
+   ATW_FNT_WID_LST( 171 ) =  7.0423 ;! ´
+   ATW_FNT_WID_LST( 172 ) =  8.0645 ;! ¨
+   ATW_FNT_WID_LST( 173 ) =  4.0323 ;! ≠
+   ATW_FNT_WID_LST( 174 ) = 10.101  ;! Æ
+   ATW_FNT_WID_LST( 175 ) =  8.0645 ;! Ø
+   ATW_FNT_WID_LST( 176 ) =  5.0505 ;! ∞
+   ATW_FNT_WID_LST( 177 ) =  8.0645 ;! ±
+   ATW_FNT_WID_LST( 178 ) =  4.0323 ;! ≤
+   ATW_FNT_WID_LST( 179 ) =  4.0323 ;! ≥
+   ATW_FNT_WID_LST( 180 ) =  5.0505 ;! ¥
+   ATW_FNT_WID_LST( 181 ) =  8.0645 ;! µ
+   ATW_FNT_WID_LST( 182 ) =  7.0423 ;! ∂
+   ATW_FNT_WID_LST( 183 ) =  4.0323 ;! ∑
+   ATW_FNT_WID_LST( 184 ) =  5.0505 ;! ∏
+   ATW_FNT_WID_LST( 185 ) =  4.0323 ;! π
+   ATW_FNT_WID_LST( 186 ) =  5.0505 ;! ∫
+   ATW_FNT_WID_LST( 187 ) =  7.0423 ;! ª
+   ATW_FNT_WID_LST( 188 ) = 11.1111 ;! º
+   ATW_FNT_WID_LST( 189 ) = 11.1111 ;! Ω
+   ATW_FNT_WID_LST( 190 ) = 11.1111 ;! æ
+   ATW_FNT_WID_LST( 191 ) =  8.0645 ;! ø
+   ATW_FNT_WID_LST( 192 ) =  8.0645 ;! ¿
+   ATW_FNT_WID_LST( 193 ) =  8.0645 ;! ¡
+   ATW_FNT_WID_LST( 194 ) =  8.0645 ;! ¬
+   ATW_FNT_WID_LST( 195 ) =  8.0645 ;! √
+   ATW_FNT_WID_LST( 196 ) =  8.0645 ;! ƒ
+   ATW_FNT_WID_LST( 197 ) =  8.0645 ;! ≈
+   ATW_FNT_WID_LST( 198 ) = 13.1579 ;! ∆
+   ATW_FNT_WID_LST( 199 ) =  9.0909 ;! «
+   ATW_FNT_WID_LST( 200 ) =  9.0909 ;! »
+   ATW_FNT_WID_LST( 201 ) =  9.0909 ;! …
+   ATW_FNT_WID_LST( 202 ) =  9.0909 ;!  
+   ATW_FNT_WID_LST( 203 ) =  9.0909 ;! À
+   ATW_FNT_WID_LST( 204 ) =  4.0323 ;! Ã
+   ATW_FNT_WID_LST( 205 ) =  4.0323 ;! Õ
+   ATW_FNT_WID_LST( 206 ) =  4.0323 ;! Œ
+   ATW_FNT_WID_LST( 207 ) =  4.0323 ;! œ
+   ATW_FNT_WID_LST( 208 ) = 10.101  ;! –
+   ATW_FNT_WID_LST( 209 ) = 10.101  ;! —
+   ATW_FNT_WID_LST( 210 ) = 10.101  ;! “
+   ATW_FNT_WID_LST( 211 ) = 10.101  ;! ”
+   ATW_FNT_WID_LST( 212 ) = 10.101  ;! ‘
+   ATW_FNT_WID_LST( 213 ) = 10.101  ;! ’
+   ATW_FNT_WID_LST( 214 ) = 10.101  ;! ÷
+   ATW_FNT_WID_LST( 215 ) =  8.0645 ;! ◊
+   ATW_FNT_WID_LST( 216 ) = 10.101  ;! ÿ
+   ATW_FNT_WID_LST( 217 ) = 10.101  ;! Ÿ
+   ATW_FNT_WID_LST( 218 ) = 10.101  ;! ⁄
+   ATW_FNT_WID_LST( 219 ) = 10.101  ;! €
+   ATW_FNT_WID_LST( 220 ) = 10.101  ;! ‹
+   ATW_FNT_WID_LST( 221 ) = 10.101  ;! ›
+   ATW_FNT_WID_LST( 222 ) =  9.0909 ;! ﬁ
+   ATW_FNT_WID_LST( 223 ) =  8.0645 ;! ﬂ
+   ATW_FNT_WID_LST( 224 ) =  8.0645 ;! ‡
+   ATW_FNT_WID_LST( 225 ) =  8.0645 ;! ·
+   ATW_FNT_WID_LST( 226 ) =  8.0645 ;! ‚
+   ATW_FNT_WID_LST( 227 ) =  8.0645 ;! „
+   ATW_FNT_WID_LST( 228 ) =  8.0645 ;! ‰
+   ATW_FNT_WID_LST( 229 ) =  8.0645 ;! Â
+   ATW_FNT_WID_LST( 230 ) = 12.0482 ;! Ê
+   ATW_FNT_WID_LST( 231 ) =  7.0423 ;! Á
+   ATW_FNT_WID_LST( 232 ) =  8.0645 ;! Ë
+   ATW_FNT_WID_LST( 233 ) =  8.0645 ;! È
+   ATW_FNT_WID_LST( 234 ) =  8.0645 ;! Í
+   ATW_FNT_WID_LST( 235 ) =  8.0645 ;! Î
+   ATW_FNT_WID_LST( 236 ) =  4.0323 ;! Ï
+   ATW_FNT_WID_LST( 237 ) =  4.0323 ;! Ì
+   ATW_FNT_WID_LST( 238 ) =  4.0323 ;! Ó
+   ATW_FNT_WID_LST( 239 ) =  4.0323 ;! Ô
+   ATW_FNT_WID_LST( 240 ) =  8.0645 ;! 
+   ATW_FNT_WID_LST( 241 ) =  8.0645 ;! Ò
+   ATW_FNT_WID_LST( 242 ) =  8.0645 ;! Ú
+   ATW_FNT_WID_LST( 243 ) =  8.0645 ;! Û
+   ATW_FNT_WID_LST( 244 ) =  8.0645 ;! Ù
+   ATW_FNT_WID_LST( 245 ) =  8.0645 ;! ı
+   ATW_FNT_WID_LST( 246 ) =  8.0645 ;! ˆ
+   ATW_FNT_WID_LST( 247 ) =  6.0606 ;! ˜
+   ATW_FNT_WID_LST( 248 ) =  8.0645 ;! ¯
+   ATW_FNT_WID_LST( 249 ) =  8.0645 ;! ˘
+   ATW_FNT_WID_LST( 250 ) =  8.0645 ;! ˙
+   ATW_FNT_WID_LST( 251 ) =  8.0645 ;! ˚
+   ATW_FNT_WID_LST( 252 ) =  8.0645 ;!
+   ATW_FNT_WID_LST( 253 ) =  8.0645 ;!
+   ATW_FNT_WID_LST( 254 ) =  0      ;!
+   ATW_FNT_WID_LST( 255 ) =  8.0645 ;! ˇ
+
+RETURN

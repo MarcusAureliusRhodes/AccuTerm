@@ -1,0 +1,159 @@
+PROGRAM EMV_ATW
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software;  You can redistribute it and/or
+!           modify it under the terms of the GNU  general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:50 by Marcus
+
+! Platform: Any Pick; Any OS; AccuTerm; Any emulation
+
+! Function: Passes commands to  AccuTerm  mostly  from  paragraphs  and
+!           procs.
+
+! Syntax  : EMV_ATW command parameters (OPTIONS
+
+! E.g.: ...
+
+! ... to wait for a directory listing to be generated ...
+
+!    EMV_ATW DOS DIR C:\*.* /OD>C:\TEMP\DIR.TXT
+
+! ... to copy files without waiting ...
+
+!    EMV_ATW DOS& XCOPY C:\TEMP\*.* D:\TEMP\*.* /D /I /C /E /Y
+
+! ... to capture future screen output to a file ...
+
+!    EMV_ATW CAPTURE  A|C|N|O  P|""  T|""  C:\PATH\FILE.EXT
+!                     | | | |  | |   | |   |
+!                     | | | |  | |   | |   The path of the captured data
+!                     | | | |  | |   | |
+!                     | | | |  | |   | (all data) (Omit quotes!)
+!                     | | | |  | |   T(ext) (strip control-chars)
+!                     | | | |  | |
+!                     | | | |  | (all data) (Omit quotes!)
+!                     | | | |  P(rinted data)
+!                     | | | |
+!                     | | | O(verwrite)
+!                     | | N(ew file)
+!                     | C(lipboard) (= no file)
+!                     A(ppend)
+
+! ... to close that capture file ...
+
+! EMV_ATW CAPTURE
+
+! ... to capture a region of the screen to a file ...
+
+!    EMV_ATW CAPTURE x,y,w,h C:\PATH\FILE.EXT
+
+! Upcoming:
+
+   EQU IDENTITY TO 'EMV_ATW'
+
+   INCLUDE EMV,BIN EMV_UBIQUITOUS_STUFF
+
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB FETCH.OUR.PARA_LST
+   IF CONTINUING AND SUCCESSFUL THEN GOSUB PARSE.THE.COMMAND
+
+STOP
+
+FETCH.OUR.PARA_LST:
+
+   CALL EMV_GET_CMD_LINE( RUN_MODE, FILENAME, PRG_NAME, PARA_LST, OPTS_LST )
+
+RETURN
+
+PARSE.THE.COMMAND:
+
+   BEGIN CASE
+
+      CASE PARA_LST< 1 > EQ 'CAPTURE' ; GOSUB CAPTURE
+      CASE PARA_LST< 1 > EQ 'DOS'     ; GOSUB EXECUTE.AND.WAIT
+      CASE PARA_LST< 1 > EQ 'DOS&'    ; GOSUB EXECUTE.AND.CONTINUE
+!     CASE PARA_LST< 1 > EQ 'RESET'   ; GOSUB RESET
+!     CASE PARA_LST< 1 > EQ 'SIZE'    ; GOSUB SIZE
+      CASE OTHERWISE                  ; CALL EMV_ALERT_BOX( 'Unknown command! (' : CHANGE( PARA_LST, @AM, ' ' ) : ')', 30 )
+
+   END CASE
+
+RETURN
+
+CAPTURE:
+
+   IF PARA_LST< 2 >[ 2, 1 ] EQ ':' THEN PARA_LST< 2 > = 'N' : @AM : PARA_LST< 2 >
+   IF PARA_LST< 3 >[ 2, 1 ] EQ ':' THEN PARA_LST< 3 > = ''  : @AM : PARA_LST< 3 >
+   IF PARA_LST< 4 >[ 2, 1 ] EQ ':' THEN PARA_LST< 4 > = ''  : @AM : PARA_LST< 4 >
+
+   PARA_LST< 2 > = PARA_LST< 2 >[ 1, 1 ]
+   PARA_LST< 3 > = PARA_LST< 3 >[ 1, 1 ]
+   PARA_LST< 4 > = PARA_LST< 4 >[ 1, 1 ]
+
+   IF PARA_LST< 2 > EQ 'T' THEN TMP = PARA_LST< 2 > ; PARA_LST< 2 > = PARA_LST< 4 > ; PARA_LST< 4 > = TMP
+   IF PARA_LST< 3 > EQ 'T' THEN TMP = PARA_LST< 3 > ; PARA_LST< 3 > = PARA_LST< 4 > ; PARA_LST< 4 > = TMP
+
+   IF PARA_LST< 2 > EQ 'P' THEN TMP = PARA_LST< 2 > ; PARA_LST< 2 > = PARA_LST< 3 > ; PARA_LST< 3 > = TMP
+   IF PARA_LST< 4 > EQ 'P' THEN TMP = PARA_LST< 4 > ; PARA_LST< 4 > = PARA_LST< 3 > ; PARA_LST< 3 > = TMP
+
+   IF PARA_LST< 5 >[ 2, 1 ] EQ ':' THEN
+
+      GOSUB CAPTURE.START
+
+   END ELSE
+
+      GOSUB CAPTURE.CLOSE
+
+   END
+
+RETURN
+
+CAPTURE.START:
+
+   CRT ESC : STX : 'C' : PARA_LST< 2 > : PARA_LST< 3 > : PARA_LST< 4 > : ';' : PARA_LST< 5 > : CR :
+
+RETURN
+
+CAPTURE.CLOSE:
+
+   CRT ESC : STX : 'CX'
+
+RETURN
+
+EXECUTE.AND.WAIT:
+
+   GOSUB UNPARSE.PARA_LST
+
+   CRT ESC : STX : '>' : PARA_LST
+
+RETURN
+
+EXECUTE.AND.CONTINUE:
+
+   GOSUB UNPARSE.PARA_LST
+
+   CRT ESC : STX : '<' : PARA_LST
+
+RETURN
+
+UNPARSE.PARA_LST:
+
+   PARA_LST = OCONV( PARA_LST, 'G1' : @AM : '256' )
+
+   N = DCOUNT( PARA_LST, @AM )
+
+   FOR X = 1 TO N
+
+      IF INDEX( PARA_LST< X >, ' ', 1 ) THEN
+
+         PARA_LST< X > = '"' : PARA_LST< X > : '"'
+
+      END
+
+   NEXT X
+
+   PARA_LST = CHANGE( PARA_LST, @AM, ' ' )
+
+RETURN

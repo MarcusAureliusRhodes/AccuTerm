@@ -1,0 +1,51 @@
+SUBROUTINE EMV_VER_PTH_ATW( PATHNAME, ALLSWELL )
+
+! Copyright 1994-2020 Marcus Rhodes <marcus1@thinqware.com>
+
+!           This program is free software; You can redistribute it and/or
+!           modify it under the terms of the GNU general  public  license
+!           version 3 as published by the Free Software Foundation.
+
+! Modified: 07/24/2017 22:46:36 by Marcus
+
+! Platform: Any Pick; Any Windows; AccuTerm; Any emulation
+
+! Function: Verifies the existence of PATHNAME
+
+! Variable IO Typ Description____________________________________________
+! PATHNAME >< STR The full path/filename
+! ALLSWELL >< 0/1 Whether it exists
+
+! Examples: CALL EMV_VER_PTH_ATW( 'C:\Usr\Me\Docs\Test.txt', ALLSWELL )
+
+! Upcoming: This should be a function (on everything but D3).
+!           Change is the only constant. -- Heraclitus
+
+! Old name: CHECK_WIN_EXISTS
+
+! Catalog : EMV_VER_PTH_ATW
+
+! New name: EMV_PTH_CHK_ATW
+
+   EQU IDENTITY TO 'EMV_VER_PTH_ATW'
+
+   IF ALLSWELL THEN
+
+      VBA_CODE  = CHAR( 27 ) : CHAR( 2 ) : 'P'
+      VBA_CODE := '`Dim s as accutermclasses.session'
+      VBA_CODE := '`set s=activesession'
+      VBA_CODE := '`s.output fileexists("' : PATHNAME : '")&vbCr'
+
+      ECHO OFF
+
+      CRT CHANGE( VBA_CODE, '`', CHAR( 25 ) ) : CHAR( 13 ) :
+
+      INPUT ALLSWELL ;! the script enters this
+
+      ECHO ON
+
+      ALLSWELL  = ALLSWELL EQ 'true'
+
+   END
+
+RETURN ;! to the calling program.
